@@ -1,0 +1,177 @@
+
+-------------------
+
+Rolling updates:
+---
+
+1. k get deploy
+2. ./curl-test.sh // execute script 
+3. k edit deployment frontend 
+4. k set image deploy frontend simple-webapp=kodekloud/webapp-color:v2
+5. k set image deploy frontend simple-webapp=kodekloud/webapp-color:v3
+
+Note:
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+strategy:
+    type: Recreate
+
+
+Commands and arguments:
+---
+1. k edit pod ubuntu-sleeper-3.yaml
+2. k run webapp-green --image=kodekloud/webapp-color --  --color green
+
+Note:
+
+    command: ["sleep", " 5000"]
+
+    command:
+    - "sleep"
+    - "5000"
+
+    command: ["sleep"]
+    args: ["5000"]
+All the elements in command must be string can't have number 
+
+K edit pod name with below or edit pod definition file directly 
+k replace --force -f file path
+Definition file command will override the entry point and the args will override the command. 
+
+-- command: condering by the process running not by kubelet 
+
+k run webapp-green --image=kodekloud/webapp-color -- command -- python py.2 --color green // fi want to override the command 
+k run webapp-green --image=kodekloud/webapp-color --  --color green
+
+./webapp color green
+
+
+Env:
+---
+1. k describe pod webapp-color | grep Environment
+2. k edit pod webapp-color
+3. k replace --force -f /tmp/kubectl-edit-1020168777.yaml
+4. k describe cm db-config
+5. k create cm -h
+6. k create cm webapp-config-map --from-literal=APP_COLOR=darkblue
+7. k describe cm webapp-config-map
+8. k replace --force -f /tmp/kubectl-edit-1898088499.yaml
+9. 
+
+Note: 
+spec:
+  containers:
+  - envFrom:
+    - configMapRef:
+        name: webapp-config-map
+
+
+Secret: 
+---
+
+1. k get secret
+2.  k describe secret dashboard-token 
+3. k create secret generic db-secret --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal DB_Password=password123
+4. k replace --force -f /tmp/kubectl-edit-3403434051.yaml
+5. vi /tmp/kubectl-edit-3403434051.yaml
+
+Note:
+
+Default kubernates
+k get svc: kubernetes       ClusterIP   10.43.0.1       <none>        443/TCP          49m
+
+Type:  Opaque
+
+Data
+====
+DB_Host:      5 bytes
+DB_Password:  11 bytes
+DB_User:      4 bytes
+
+
+    envFrom:
+    - secretRef:
+       name: db-secret
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-tmchx
+      readOnly: true
+
+
+Encrypting Secret Data at Rest:
+---
+
+
+Multi-container Pods:
+---
+
+1. k describe pod blue 
+2. k run yellow --image=busybox --dry-run=client -o yaml > yellow.yaml
+3. k get pods -n elastic-stack 
+4. k logs app -n elastic-stack 
+5. k -n elastic-stack exec app  -it -- cat /log/app.log // store within pod
+6. k replace --force -f /tmp/kubectl-edit-3193915634.yaml
+
+
+Note:
+
+Consenter will the same name as pod name if not specified 
+spec:
+  containers:
+  - image: busybox
+    name: lemon
+  - name: gold
+    image: redis
+    command: ["sleep","1000"]
+
+
+spec:
+  containers:
+  - image: kodekloud/filebeat-configured
+    name: sidecar
+    volumeMounts:
+    - mountPath: /var/log/event-simulator/
+      name: log-volume
+  - image: kodekloud/event-simulator
+    imagePullPolicy: Always
+    name: app
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /log
+      name: log-volume
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+
+
+
+Init contianer:
+---
+
+1. k describe pod - all pods 
+2. k replace --force -f /tmp/kubectl-edit-3775423428.yaml
+3. k logs orange -c init-myservice
+4. k logs orange  init-myservice
+
+
+Note:
+
+State:  Terminated
+Reason:       Completed
+Exit Code:    0
+
+First init container kicks in then main container(application) will be start after completion of init container. 
+
+  initContainers:
+  - image: busybox
+    name: busybox
+    command: ["sleep ","20"]
+
+ initContainers:
+  - command:
+    - sh
+    - -c
+    - sleep 2;
+
+
+
+

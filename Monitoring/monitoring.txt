@@ -1,0 +1,27 @@
+
+-------------------
+
+LOGGING & MONITORING:
+---
+
+Monitor Cluster  - Optional:
+---
+
+1. Deploy matrices server - don't use for production 
+2. kubectl top node
+3. k top pods
+
+Note:
+git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
+
+
+
+Logs:
+---
+
+1. k logs webapp-1 (pod that have application running as containers)
+2. k logs webapp-2 simple-webapp 
+
+Note:
+
+If pod has two or more containers you must specify the container name for retrieving logs. Pod name following container name 
