@@ -5,7 +5,8 @@
 Scheduling:
 ---
 
-Manaul pod Scheduling - Optional
+Manual pod Scheduling - Optional
+
 
 1. Assigning nodename on pod 
 2. K replace --force -f nginx.yaml delete and create pod 
@@ -15,7 +16,7 @@ Note:
 
 We cannot remove running pod from one node to another only you can delete pod from one node and recreate on anther. 
 
-Node: <none>
+Node: <none> // means pod not placed 
 
 spec:
   nodeName: node01
@@ -23,6 +24,14 @@ spec:
   -  image: nginx
      name: nginx
 
+Note:
+Scheduling pod include 10 steps:
+
+---
+1. Scoring and filtering 
+2. percentageOfNodesToScore
+3. Scheduling cycle
+4. Binding cycle
 
 
 
@@ -48,7 +57,8 @@ Taints and Tolerations - Optional:
 9. k taint node controlplane node-role.kubernetes.io/control-plane:NoSchedule-
 10. k get pods mosquito -o wide
 
-Note: we cannot add toleration to pod view command. To remove taint add - and the end of taint 
+Note: we cannot add toleration to pod view command. To remove taint add - and the end of taint
+
 tolerations:
     - key: spray
       value: mortein
@@ -69,7 +79,7 @@ Node Affinity - Optional:
 7. k get pdos -o wide
 8. k create deployment red --image=nginx --replicas=2 --dry-run=client -o yaml > red.yam
 
-Note: affinity come after spec before container and its pod level. 
+Note: affinity come after spec before container and its pod level scoped field. 
 
     spec:
       affinity:
@@ -108,9 +118,11 @@ Resource Limits - Optional:
 1. k edit pod elephant 
 2. k replace --force -f /tmp/kubectl-edit-4096856426.yaml
 
-Note: cannot edit running pod but same the changes temprarly("/tmp/kubectl-edit-4096856426.yaml").
+Note: cannot edit running pod but when edit it save a temporary copy of  the changes temprarly("/tmp/kubectl-edit-4096856426.yaml").
+
 1. We can delete  and recreate pod
 2. --force killed the existing pod and recreate (k replace --force -f /tmp/kubectl-edit-4096856426.yaml) 
+
 Container = process running in memory 
 
 
@@ -132,10 +144,10 @@ Static Pods: - Optional:
 ---
 
 1. Static running by kubelet not cluster involve only kubelet
-2. Node name will be at and appended to static pod 
+2. Node name that static is hosting will be appended to static pod 
 3. staticPodPath: /etc/kubernetes/manifests - cat /var/lib/kubelet/config.yaml path configuration 
 4. We can deploy 
-5. --command should alway be at the end 
+5. -- command should alway be at the end that will separate 
 6. k get pod -n kube-system kube-apiserver-controlplane -o yaml
 7. k get pods -A
 9. cat /var/lib/kubelet/config.yaml to check static pod configuration 
@@ -143,7 +155,7 @@ Static Pods: - Optional:
 11. k run static-busybox --image=busybox --dry-run=client -o yaml --command -- sleep 1000  > static-busybox
 12. vi /etc/kubernetes/manifests/static-busybox
 13. k delete pod static-greenbox-node01 using this way will delete the static and will recreate not deleting permenantly 
-14.  k get nodes -o wide
+14. k get nodes -o wide
 15. ssh 192.37.135.11
 16. cat /var/lib/kubelet/config.yaml kubelet configuration file (staticPodPath: /etc/just-to-mess-with-you)
 17. cd /etc/just-to-mess-with-you
@@ -153,6 +165,7 @@ Static Pods: - Optional:
 
 
 Note: 
+
 k get pod -n kube-system kube-apiserver-controlplane -o yaml
  ownerReferences:
   - apiVersion: v1
@@ -160,19 +173,21 @@ k get pod -n kube-system kube-apiserver-controlplane -o yaml
     kind: Node // owner is Node// static pod 
 
 ---
+
 k get pod -n kube-system kube-apiserver-controlplane -o yaml
  ownerReferences:
   - apiVersion: apps/v1
     blockOwnerDeletion: true
     controller: true
-    kind: DaemonSet
+    kind: DaemonSet // part of DaemonSet
     name: kube-proxy
 
 
-staticPodPath: /etc/just-to-mess-with-you
+StaticPodPath: /etc/just-to-mess-with-you
 What is the path of the directory holding the static pod definition files?
-kubelet.config.k8s.io/v1beta1: kubelet create the pod 
-staticPodPath: /etc/kubernetes/manifests thi dir that create the pod 
+
+kubelet.config.k8s.io/v1beta1: // kubelet create static pod 
+staticPodPath: /etc/kubernetes/manifests: this is that dir that create the pod 
 
 
 MULTIPLE SCHEDULERS - Optional:
@@ -184,11 +199,13 @@ MULTIPLE SCHEDULERS - Optional:
 5. k get configmaps  -n kube-system 
 6. k describe pod -n kube-system kube-scheduler-controlplane | grep Image
 7. k get pods -n kube-system
-8. 
+
 
 
 Note:
+
 controlplane ~ ➜  cat /root/my-scheduler-config.yaml 
+
 apiVersion: kubescheduler.config.k8s.io/v1beta2
 kind: KubeSchedulerConfiguration
 profiles:

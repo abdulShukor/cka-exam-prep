@@ -1,0 +1,159 @@
+
+----------
+
+Persistence Values and Persistence Claims:
+
+1. kubectl exec webapp -- cat /log/app.log
+2. k get pv
+3. k get pvc
+4. k replace --force -f pvc.yaml
+5. ls /pv/log
+6. cat /pv/log/app.log 
+7. k get pv pv-log 
+8. k delete pvc claim-log-1 
+9. k delete pod webapp 
+10. k get pvc
+
+
+Note:
+
+Container level mounting
+- mountPath: /log
+      name: log-volume
+
+
+Pod level volume hostPath 
+ volumes:
+  - name: log-volume
+    hostPath:
+      path: /var/log/webapp
+
+PV
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-log
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /pv/log
+
+Pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claim-log-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+
+Lab
+--
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claim-log-1
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Mi
+
+Lab
+---
+ volumes:
+  - persistentVolumeClaim:
+      claimName:  claim-log-1
+    name: log-volume
+
+---
+PVC is Status: Terminating (lasts 37s) it been used by a pod that's why only will the status change if we delete the pod  
+Access mode matter while binding PV to PVC
+
+---
+Volume modes: Kubernetes supports two types of volume modes: Filesystem & Block.
+Access modes: Kubernetes supports three types of access modes: ReadWriteOnce, ReadOnlyMany & ReadWriteMany.
+Reclaim Policy: Kubernetes supports three policies: Retain, Recycle & Delete
+
+Storage Class:
+---
+1. k get sc
+2.  k describe pvc local-pvc // look for events 
+
+
+Lab
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+  storageClassName: local-storage
+
+
+Lab
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+  - image: nginx:alpine
+    name: nginx
+    resources: {}
+    volumeMounts:
+      - mountPath: "/var/www/html"
+        name: local-pvc-volume
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  volumes:
+    - name: local-pvc-volume
+      persistentVolumeClaim:
+        claimName: local-pvc
+
+Lab
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: delayed-volume-sc
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer 
+
+
+
+Note:
+
+VOLUMEBINDINGMODE:
+1. WaitForFirstConsumer. The Storage Class called local-storage makes use of VolumeBindingMode set to WaitForFirstConsumer. This will delay the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created.
+
+2. Immediate
+
+PROVISIONER:
+
+
+
+
+
+
+
+

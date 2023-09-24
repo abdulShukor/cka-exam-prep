@@ -18,12 +18,16 @@ OS UPGRADES:
 Note:
 
 Pod evicted 
-node01         Ready,SchedulingDisabled   <none>          12m   v1.27.0
+node01         Ready    SchedulingDisabled   <none>          12m   v1.27.0
+
 Pods from drained node will not come back automatically back to that node only new pod will placed. 
 Usually pod doesn't not scheduled on control node it has taint. 
-Only drained pod that part of rs, deploy, daemon set, job, stateful set. 
+Only drained pod that part of rs, deploy, daemon set, job, stateful set will be placed on other nodes. 
 
 Simple pod cannot be rescheduled 
+
+---
+Static pod will be recreated by kubelet if we delete only possible to delete permanently if we remove the yaml From the configuration path 
 
 
 CLUSTER UPGRADE:
@@ -46,20 +50,26 @@ CLUSTER UPGRADE:
 NOTE:
 
 Node and control plan = VMs
+
 Upgrade one node at a time while moving the workloads to the other
+
 [upgrade/versions] Cluster version: v1.26.0
 [upgrade/versions] kubeadm version: v1.26.0
+
 kubeadm upgrade apply v1.26.8
 remote version is much newer: v1.28.1
+
 https://v1-27.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
 kubeadm=1.27.x-00 replace x with patch version 
 To updated worker node you need to be on worker node do ssh node01
+
 Kubelet may not alway run on control plan make sure to double check. 
+
 K get nodes -- the version is kubelet. We have manually upgrade 
 
 We need go to control node to drain worker node 
 
-Kubelet is a process 
+Kubelet is a process(daemon) running in background and control by systemd. 
 
 
 
@@ -82,6 +92,7 @@ Note:
 
 Node is the host for pod 
 The env should be set before running the command 
+
 ETCDCTL_API=3 etcdctl snapshot
 export ETCDCTL_API=3
 version of ETCD = Image: registry.k8s.io/etcd:3.5.7-0
@@ -129,7 +140,7 @@ Backup and Restore method 2:
 Note:
 
 Stacked ETCD = local running as pod
-External ETCt = --etcd-servers=https://192.29.159.15:2379
+External ETCT = --etcd-servers=https://192.29.159.15:2379
 Date dir = --data-dir=/var/lib/etcd 
 
 
