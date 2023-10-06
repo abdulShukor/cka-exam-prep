@@ -7,11 +7,12 @@ Rolling updates:
 1. k get deploy
 2. ./curl-test.sh // execute script 
 3. k edit deployment frontend 
-4. k set image deploy frontend simple-webapp=kodekloud/webapp-color:v2
+4. k set image deploy frontend simple-webapp=kodekloud/webapp-color:v2  // simple-webapp is container name 
 5. k set image deploy frontend simple-webapp=kodekloud/webapp-color:v3
 
 Note:
 RollingUpdateStrategy:  25% max unavailable, 25% max surge
+
 ---
 strategy:
     type: Recreate
@@ -26,7 +27,7 @@ Note:
 
     command: ["sleep", " 5000"]
 ---
-    command:
+    command:      // container scope 
     - "sleep"
     - "5000"
 
@@ -39,7 +40,7 @@ K edit pod name with below or edit pod definition file directly
 k replace --force -f file path
 Definition file command will override the entry point and the args will override the command. 
 
--- command: consdering by the process running not by kubelet or Kubernetes  
+-- command: considering by the process running not by kubelet or Kubernetes  
 
 k run webapp-green --image=kodekloud/webapp-color -- command -- python py.2 --color green // fi want to override the command 
 k run webapp-green --image=kodekloud/webapp-color --  --color green
@@ -56,9 +57,17 @@ Env:
 5. k create cm -h
 6. k create cm webapp-config-map --from-literal=APP_COLOR=darkblue
 7. k describe cm webapp-config-map
-8. k replace --force -f /tmp/kubectl-edit-1898088499.yaml
+8. k replace --force -f /tmp/kubectl-edit-1898088499.yaml.  // add to yaml if more than one args or commands 
 9. 
 
+---
+apiVersion: v1
+data:
+  APP_COLOR: darkblue
+  APP_OTHER: disregard
+kind: ConfigMap
+
+----
 Note: 
 spec:
   containers:
@@ -90,11 +99,19 @@ DB_Password:  11 bytes
 DB_User:      4 bytes
 
 
-    envFrom:
+Two types of ENV:
+1. ENV
+2. EnvFrom 
+
+Env: directly into pod
+
+---
+    envFrom:                        //  injection from secret reference  into container 
     - secretRef:
        name: db-secret
+---
     volumeMounts:
-    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount         // through volume of pod  then into container 
       name: kube-api-access-tmchx
       readOnly: true
 
@@ -174,6 +191,8 @@ First init container kicks in then main container(application) will be start aft
     - -c
     - sleep 2;
 
+Note: pod will be in pending until the the init-container finish their job. If there are multiple if finished their job one one and go the next one. It's under pod level spec not container. 
 
+k get pod orange  --dry-run=client -o yaml> orange.yaml // creating new in yaml definition vs k get pod orange   -o yaml> orange.yaml // getting already object in yaml
 
 
