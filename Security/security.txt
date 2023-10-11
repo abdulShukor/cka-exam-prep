@@ -1,0 +1,47 @@
+---
+
+1. ls /etc/kubernetes/manifests/
+2. cat /etc/kubernetes/manifests/kube-apiserver.yaml 
+3. cat /etc/kubernetes/manifests/etcd.yaml 
+4. openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
+5. openssl x509 -in /etc/kubernetes/pki/etcd/server.crt -text -noout
+6. openssl x509 -in /etc/kubernetes/pki/ca.crt  -text -noout. // root or ca certificate 
+7. crictl  ps -a | grep kube-apiserver
+8. crictl logs 6f707f569b572
+9. crictl  ps -a | grep etcd
+10. crictl logs 7e46aac2d97ec
+11. ls /etc/kubernetes/pki/etcd/
+12. cat /etc/kubernetes/manifests/etcd.yaml 
+13. cat /etc/kubernetes/manifests/etcd.yaml | grep server-certificate.crt
+14. vi  /etc/kubernetes/manifests/etcd.yaml
+15. crictl ps -a | grep kube-apiserver
+16. cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep "\-\-etcd"
+17. 
+
+
+Note:
+
+PKI dir // kubernetes  API sever 
+PKI/etcd.  For etcd
+CA etcd has its own and so the API sever
+
+ ls /etc/kubernetes//pki/etcd/ca.crt 
+ ls /etc/kubernetes//pki/etcd/
+ vi /etc/kubernetes/manifests/kube-apiserver.yaml 
+ - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
+
+
+CERTIFICATES API
+---
+
+
+
+
+
+
+
+
+
+
+
+

@@ -162,9 +162,9 @@ Stacked ETCD = local running as pod on control plane
 External ETCT = --etcd-servers=https://192.29.159.15:2379
 Date dir = --data-dir=/var/lib/etcd 
 
-
-
-
+systemctl status kubelet // check if its running on master node 
+ps aux | grep kubelet.  // check if its running on master node 
+/etc/kubernetes/kubelet.conf //Node Configuration File
 
 
 

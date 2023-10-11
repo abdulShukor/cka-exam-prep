@@ -13,6 +13,8 @@ Persistence Values and Persistence Claims:
 8. k delete pvc claim-log-1 
 9. k delete pod webapp 
 10. k get pvc
+11. k get pods webapp -o yaml > webapp.yaml
+12. k replace --force -f webapp.yaml 
 
 
 Note:
@@ -22,7 +24,7 @@ Container level mounting
       name: log-volume
 
 
-Pod level volume hostPath 
+Pod/node level volume hostPath 
  volumes:
   - name: log-volume
     hostPath:
@@ -83,7 +85,7 @@ Access mode matter while binding PV to PVC
 ---
 Volume modes: Kubernetes supports two types of volume modes: Filesystem & Block.
 Access modes: Kubernetes supports three types of access modes: ReadWriteOnce, ReadOnlyMany & ReadWriteMany.
-Reclaim Policy: Kubernetes supports three policies: Retain, Recycle & Delete
+Reclaim Policy: Kubernetes supports three policies: Retain, Recycle(used dynamic provisioning instead) & Delete
 
 Storage Class:
 ---
@@ -144,6 +146,7 @@ volumeBindingMode: WaitForFirstConsumer
 Note:
 
 VOLUMEBINDINGMODE:
+
 1. WaitForFirstConsumer. The Storage Class called local-storage makes use of VolumeBindingMode set to WaitForFirstConsumer. This will delay the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created.
 
 2. Immediate
