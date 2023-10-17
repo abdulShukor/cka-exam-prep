@@ -21,9 +21,9 @@
 
 Note:
 
-PKI dir // kubernetes  API sever 
-PKI/etcd.  For etcd
-CA etcd has its own and so the API sever
+/PKI dir // kubernetes  API sever 
+/PKI/etcd.  For etcd
+Etcd has its own CA and so the API sever
 
  ls /etc/kubernetes//pki/etcd/ca.crt 
  ls /etc/kubernetes//pki/etcd/
@@ -34,14 +34,120 @@ CA etcd has its own and so the API sever
 CERTIFICATES API
 ---
 
+1.  cat akshay.csr | base64 -w 0 // make sure print in single line 
+2. cat > akshay.yaml
+3. k certificate approve akshay
+4. k get csr
+5. k get csr agent-smith -o yaml
+6. k certificate deny agent-smith
+7. M       
 
 
 
 
+Note:
+
+No imperative commands 
+
+
+---
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: akshay
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1ZqQ0NBVDRDQVFBd0VURVBNQTBHQTFVRUF3d0dZV3R6YUdGNU1JSUJJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQVE4QU1JSUJDZ0tDQVFFQW9yL3JpbXlpYVJZL1RoSnlYRllYVm5UaC9MUmFOT0RCbWlJelYwNEtKQkFOClR6MlMzdDVhT25ZUWR5V0Zlc1pDZUFHeFpsR3JMQXE2eDdqNm9kbTgySjNOdU8yRWk3SUl0ZU5PeEhvdjZjUDUKalQxblFqV0dURlhsWDhmS3ZLTDQ2VXFtODN6STRPMFNkemRBSnJyWGdIL2NoL2QrbnNqMFZ1ejN3V0pOTWpBbwo3SGlhdlgzcnorVlduSTdIR1dLa0Z5T2dJUGxvRVRha1F1YVNyZEgwRUlUT0R2OVRZQmQ5VkdlYUN3V0tmb25kCk0xaVI1c2xPK1hoK2tNU1Z1V2lvNVJnTHFIYkpHeHhqUTVOa0ZPNnF3M3paYUJzNVB2R2NEdWFoNnpuMXZCN08KaExDYTFnWi9RVzYraXlCZU4yVk9rcmNXbDVXay84TGc3Skh3Z28zSVdRSURBUUFCb0FBd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBSjFIMmR3WndMWTNqZXdodnVNV3VUbldIMm9BNjZFd3RJT0ZZcW1XRXc0WWkzdHU4dXZWCk5TT3JrZXZVZTQzMTY2TUNvclJZRUx6c09YVE9YYSs5RzlaTUY4eDJudWZqa0ozWFZCV3U4QU1ST0JVcDZaV3YKcFd1RnduNkt1dlVEYnpBa2g4dklJWTg3UHJtRzYrd1FGdzhmSi9vcmxXYjR5U2tTRlZESnA4YktEZ2plcDdxNQpLenUvTlc5bUw5dXVoQjM5RDJ6aFhqUVE5VHhVek9lc3ZSUXp5YmU1U3BNakY4bi9DZ1Q3QzY1cE1Tb25wUTkvCmFlSWh5YkZPWStMaUxqblkweC9oSUU1bDV2L1QrbExjUktNb213U1V1S1Z2aDZMWFhiQjg5c2NkdmRKWkNFY24KN3lmYjdCNmg2bTFMaXFVcGFzcUhWZHJSUi80RDJLclMzanM9Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - client auth
 
 
 
+KUBECONFIG:
+---
+
+1. cat .kube/config //root 
+2. kubectl config use-context research --kubeconfig /root/my-kube-config
+3. mv /root/my-kube-config  .kube/config 
+4. k config view 
+5. cat /root/.kube/config 
+6. ls /etc/kubernetes/pki/users // all client cert 
+7. ls /etc/kubernetes/pki/users/dev-user/
+8. vi /root/.kube/config 
+
+
+NOTE:
+We can have multiple config file. 
+.kube/config default config file 
+
+RBAC:
+--
+
+1. cat /etc/kubernetes/manifests/kube-apiserver.yaml 
+2.  - --authorization-mode=Node,RBAC
+3. ps -aux | grep authorization
+4. k get roles
+5. k get roles -A --no-headers | wc -l
+6. k describe role -n kube-system  kube-proxy 
+7. k get rolebindings -n kube-system
+8. k describe rolebindings -n kube-system kube-proxy
+9. k get pods --as dev-user
+10. k create role developer --verb=list,get,create,delete --resource=pods
+11. k create rolebinding dev-user-binding --role=developer --user=dev-user
+12. k --as dev-user get pod dark-blue-app -n blue
+13. k edit role -n blue developer 
+14. k edit role -n blue developer 
+15. k describe role -n blue developer
+
+
+NOTE:
+
+- apiGroups:
+  - "apps"
+  resourceNames:
+  - deployment
+  resources:
+  - deployment
+  verbs:
+  - get
+  - watch
+  - create
+  - delete
+
+CLUSTER:
+---
+1. k get clusterrole
+2. k get clusterrole --no-headers | wc -l
+3. k get clusterrolebindings --no-headers | wc -l
+4. k describe clusterrolebindings cluster-admin 
+5. k get clusterrolebindings | grep cluster-admin
+6. k describe clusterrole cluster-admin 
+7. k get nodes --as michelle
+8. k create clusterrole  michelle-role --verb=get,list,watch --resource=nodes
+9. k create clusterrolebinding michelle-role-binding --clusterrole=michelle-role --user=michelle
+10. k describe clusterrole michelle-role 
+11.  k describe clusterrolebindings.rbac.authorization.k8s.io  michelle-role-binding 
+12. k api-resources 
+13. k create clusterrole storage-admin --resource=persistentvolumes,storageclasses --verb=list,create,get,watch
+14. k get clusterrole storage-adminn -o yaml
+15. k create clusterrolebinding michelle-storage-admin --user=michelle --clusterrole=storage-admin
 
 
 
+Service Account:
+---
+1. k get sa
+2. k describe sa default 
+3. k create serviceaccount dashboard-sa
+4. ls /var/rbac
+5. kubectl create token dashboard-sa
 
+NOTE:
+Under pod spec:  
+serviceAccountName: dashboard-sa
+
+Securing Images: 
+---
+
+1. k create secret
+2. 

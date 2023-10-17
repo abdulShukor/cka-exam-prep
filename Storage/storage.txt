@@ -15,7 +15,7 @@ Persistence Values and Persistence Claims:
 10. k get pvc
 11. k get pods webapp -o yaml > webapp.yaml
 12. k replace --force -f webapp.yaml 
-
+13. k get events
 
 Note:
 
