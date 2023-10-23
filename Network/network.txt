@@ -1,0 +1,181 @@
+--------------
+
+Networking:
+
+
+Explore environment:
+1. k get nodes -o wide 
+2. ip add show
+3. ip add show eth0.   //eth0@if5702
+4. ssh node01
+5. ip add show
+6. exit
+7. ip address show type bridge
+8.  ip route
+9. netstat -npl | grep -i scheduler
+10. netstat -npa | grep -i etcd | grep -i 2379 | wc -l
+11. netstat -npa | grep -i etcd | grep -i 2380 | wc -l
+12. 
+
+Notes:
+
+interface/bridge =eth0
+
+CNI:
+1. ps -aux | grep -i kubelet | grep container-runtime
+2. ls /opt/cni/bin/
+3.ls /etc/cni/net.d/
+4. cat 10-flannel.conflist 
+
+
+Deploy CNI:
+1. wget https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+2. k describe pod kube-proxy-c429c  -n kube-system 
+3. k describe pod kube-proxy-c429c  -n kube-system 
+4. k describe cm kube-proxy  -n kube-system 
+5. k get pods -n kube-system
+
+
+Note:
+https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
+---
+
+          containers:
+            - name: weave
+              command:
+                - /home/weave/launch.sh
+              env:
+                - name: IPALLOC_RANGE
+                  value: 10.0.0.0/16
+
+Networking weave:
+
+1. cd /etc/cni/net.d/
+2. cat 10-weave.conflist 
+3. k get pods -n kube-system -o wide 
+4. ip add
+5. k get pods -n kube-system 
+6. k logs weave-net-255f8 -n kube-system 
+7. k run busybox --image=busybox --dry-run=client -o yaml -- sleep 1000 > busybox.yaml
+8. k exec busybox -- ip route
+
+Notes:
+spec:
+  nodeName: node01
+  containers:
+
+Service networking:
+1. k get nodes -o wide
+2.  ip add
+3. k get all -A
+4. k logs pod/weave-net-x98b8 -n kube-system 
+5. cd /etc/kubernetes/manifests/
+6. cat kube-apiserver.yaml
+7. k logs kube-proxy-c4j8q -n kube-system 
+
+Note:
+--service-cluster-ip-range=10.96.0.0/12
+
+
+COREDNS:
+
+1. k get pods -n A
+2. k get pods -n kube-system
+3. k get svc -n kube-system 
+4. k describe pods coredns-5d78c9869d-sglv9 -n kube-system 
+5. k get pods -n kube-system -o yaml
+6. k get cm -n kube-system
+7. controlplane ~ ➜  k describe cm coredns -n kube-system 
+8. k describe svc web-service 
+9. k get svc -n payroll 
+10. k describe deployments.apps webapp 
+11. k edit  deployments.apps webapp 
+12. k exec hr -- nslookup mysql.payroll
+13. k exec hr -- nslookup mysql.payroll  > /root/CKA/nslookup.out
+
+
+
+NOTES:
+
+Name:              web-service
+Namespace:         default
+Labels:            <none>
+Annotations:       <none>
+Selector:          name=hr
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                10.107.86.55
+IPs:               10.107.86.55
+Port:              <unset>  80/TCP
+TargetPort:        80/TCP
+Endpoints:         10.244.0.4:80
+Session Affinity:  None
+Events:            <none>
+
+Cluster.local // is the root domain 
+
+
+ spec:
+      containers:
+      - env:
+        - name: DB_Host
+          value: mysql.payroll
+
+
+Ingress Netwrok:
+
+1. k get deploy -A
+2. k get pods -n ingress-nginx
+3. k get ingress -A
+4. k get ingress -n app-space ingress-wear-watch 
+5. k describe  ingress -n app-space ingress-wear-watch 
+6. k edit  ingress -n app-space ingress-wear-watch 
+7. k get  deploy -n app-space 
+8. k get svc  -n app-space 
+9. k get pods -A
+10. k get deployments.apps -n critical-space 
+11. k get svc -n critical-space 
+12. kubectl create ingress ingress-food -n critical-space --rule="/pay=pay-service:8282"
+13. k get ingress -n critical-space 
+14.  k describe ingress -n critical-space 
+15. k get pods -n critical-space
+16. k logs webapp-pay-5fc8b56cb5-txfnb -n critical-space 
+
+
+NOTES:
+
+Ingress controller(Kube-system) and Ingress resources 
+Default service on ingress 
+---
+      - backend:
+          service:
+            name: food-service
+            port:
+              number: 8080
+        path: /eat
+        pathType: Prefix
+
+Best practice to create their own ingress resources. 
+
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /.
+
+
+Ingress networking 2:
+1. k get pods -A 
+2. k create ns ingress-nginx
+3.  k create cm ingress-nginx-controller -n ingress-nginx 
+4. k create sa ingress-nginx -n ingress-nginx 
+5. k get role -n ingress-nginx 
+6. k get rolebindings  -n ingress-nginx 
+7. k describe role -n ingress-nginx ingress-nginx
+8. 
+
+
+
+NOTES:
+
+We can deploy application as pod or deployment
+We need to deploy Ingress controller 
+Created role and role bindings for SA

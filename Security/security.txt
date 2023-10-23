@@ -149,5 +149,92 @@ serviceAccountName: dashboard-sa
 Securing Images: 
 ---
 
-1. k create secret
-2. 
+1. k create secret.   //docker registry 
+2.  kubectl create secret docker-registry private-reg-cred  --docker-server=myprivateregistry.com:5000  --docker-username=dock_user  --docker-password=dock_password   --docker-email=dock_user@myprivateregistry.com
+3. k edit deployments web 
+
+
+
+Notes
+ spec:
+      containers:
+      - image:myprivateregistry.com:5000/nginx:alpine
+---
+:wq!
+---
+  imagePullSecrets:
+  - name: regcred
+---
+    spec:
+      imagePullSecrets:
+      - name: private-reg-cred
+
+
+Security Context:
+---
+
+1.  whoami
+2. k exec ubuntu-sleeper -- whoami
+3. / to search in vim 
+4. k get pods ubuntu-sleeper -o yaml > ub.yaml
+5. k delete pod ubuntu-sleeper 
+6. 
+
+
+Note:
+  securityContext: 
+    runAsUser: 1010
+--
+spec:
+  securityContext: // pod level 
+    runAsUser: 1001
+  containers:
+  -  image: ubuntu
+     name: web
+     command: ["sleep", "5000"]
+     securityContext:    / container level 
+      runAsUser: 1002
+--
+    securityContext:
+      capabilities:
+        add: ["SYS_TIME"]
+
+Network Policies:
+
+1. k get networkpolicies
+2. k describe netpol payroll-policy
+3. k describe netpol internal-policy 
+
+
+Note:
+We cannot ping Payroll pod from internal pod 
+ingress incoming traffic and egress is outgoing traffic from pod
+
+Lab
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name:  internal-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      name: internal
+  policyTypes:
+    - Egress
+  egress:
+   - to:
+       - podSelector:
+           matchLabels:
+             name: payroll
+     ports:
+       - protocol: TCP
+         port: 8080
+   - to:
+        - podSelector:
+            matchLabels:
+              name: mysql
+     ports:
+       - protocol: TCP
+         port: 3306
