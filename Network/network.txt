@@ -170,7 +170,11 @@ Ingress networking 2:
 5. k get role -n ingress-nginx 
 6. k get rolebindings  -n ingress-nginx 
 7. k describe role -n ingress-nginx ingress-nginx
-8. 
+8. k create ingress ingrea-wear-war -n app-space --rule="/wear=wear-service:8080" --rule="/watch=video-service:8080"
+9. k get ingress -n app-space
+10. k describe ingress -n app-space 
+11. k logs -n app-space webapp-video-55fcd88897-8kh27.  // request are not coming 
+12. k edit ingress -n app-space ingrea-wear-war 
 
 
 
@@ -179,3 +183,6 @@ NOTES:
 We can deploy application as pod or deployment
 We need to deploy Ingress controller 
 Created role and role bindings for SA
+308 indicate redirect 
+ annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /

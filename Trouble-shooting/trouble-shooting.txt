@@ -1,2 +1,71 @@
 
 -------------------
+Application failure:
+
+1. k config set-context --current --namespace=alpha
+2. K get deploy 
+3. k get svc
+4. curl http://localhost:30081
+5. k describe deployments.apps webapp-mysql
+6. k get svc
+7. k delete svc mysql // or k replace --force -f /tmp/kubectl-edit-14205819.yaml
+8. k config set-context --current --namespace=beta
+9.k describe svc  mysql-service 
+k get pod -o wide  // ip and port check
+k get pods
+k get svc
+k describe svc web-service
+k get pods -o wide
+k describe deploy webapp-mysql
+k logs webapp-mysql-5456999f7b-vll8b
+k describe svc mysql-service
+k describe pod mysql 
+k config set-context --current --namespace=delta
+k describe deploy webapp-mysql 
+
+
+NOTES:
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+
+Credential can be either save on database or on the web pod/deployment(as env) or in configmap 
+Access app
+
+
+Control plane failure:
+k get deploy
+k describe deployments.apps app
+k describe rs app-55d5fc5fcc 
+k describe pod app-55d5fc5fcc-lhsdd 
+k describe pod -n kube-system kube-scheduler-controlplane
+cat /etc/kubernetes/manifests/kube-scheduler.yaml 
+vi  /etc/kubernetes/manifests/kube-scheduler.yaml
+k describe deployments.apps app 
+k get pods -n kube-system 
+k describe pod -n kube-system kube-controller-manager-controlplane
+k logs kube-controller-manager-controlplane -n kube-system 
+cat /etc/kubernetes/manifests/kube-controller-manager.yaml | grep XXX
+ls /etc/kubernetes/controller-manager.conf 
+vi  /etc/kubernetes/manifests/kube-controller-manager.yaml 
+k get pods
+k logs  kube-controller-manager-controlplane -n kube-system 
+ls /etc/kubernetes/pki/ca.crt 
+vi /etc/kubernetes/manifests/kube-controller-manager.yaml
+k get pods
+
+
+
+Notes:
+Autocompletion // from Kubernetes cheat sheet 
+Alias 
+Service Account:  default
+Node:             <none>
+
+
+ - hostPath:
+      path: /etc/kubernetes/pki
+
+
+
