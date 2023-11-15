@@ -1,5 +1,5 @@
----
 
+------
 1. ls /etc/kubernetes/manifests/
 2. cat /etc/kubernetes/manifests/kube-apiserver.yaml 
 3. cat /etc/kubernetes/manifests/etcd.yaml 
@@ -15,15 +15,16 @@
 13. cat /etc/kubernetes/manifests/etcd.yaml | grep server-certificate.crt
 14. vi  /etc/kubernetes/manifests/etcd.yaml
 15. crictl ps -a | grep kube-apiserver
-16. cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep "\-\-etcd"
-17. 
+16. 
+
+17. vi /etc/kubernetes/manifests/kube-apiserver.yaml // etcd and api server has its own ca certificate
 
 
 Note:
 
 /PKI dir // kubernetes  API sever 
 /PKI/etcd.  For etcd
-Etcd has its own CA and so the API sever
+Etcd has its own CA and so the API sever had its own 
 
  ls /etc/kubernetes//pki/etcd/ca.crt 
  ls /etc/kubernetes//pki/etcd/
@@ -34,21 +35,16 @@ Etcd has its own CA and so the API sever
 CERTIFICATES API
 ---
 
-1.  cat akshay.csr | base64 -w 0 // make sure print in single line 
+1. cat akshay.csr | base64 -w 0 // make sure print in single line 
 2. cat > akshay.yaml
 3. k certificate approve akshay
 4. k get csr
 5. k get csr agent-smith -o yaml
 6. k certificate deny agent-smith
-7. M       
-
-
-
+7. k delete csr agent-smith      
 
 Note:
-
 No imperative commands 
-
 
 ---
 apiVersion: certificates.k8s.io/v1
@@ -62,10 +58,8 @@ spec:
   - client auth
 
 
-
 KUBECONFIG:
 ---
-
 1. cat .kube/config //root 
 2. kubectl config use-context research --kubeconfig /root/my-kube-config
 3. mv /root/my-kube-config  .kube/config 
@@ -75,10 +69,10 @@ KUBECONFIG:
 7. ls /etc/kubernetes/pki/users/dev-user/
 8. vi /root/.kube/config 
 
-
 NOTE:
 We can have multiple config file. 
-.kube/config default config file 
+.kube/config  I shte default config file 
+
 
 RBAC:
 --
@@ -102,12 +96,24 @@ RBAC:
 
 NOTE:
 
+
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - watch
+  - create
+  - delete
+
+
 - apiGroups:
   - "apps"
   resourceNames:
   - deployment
   resources:
-  - deployment
+  - deployments
   verbs:
   - get
   - watch
@@ -132,6 +138,9 @@ CLUSTER:
 14. k get clusterrole storage-adminn -o yaml
 15. k create clusterrolebinding michelle-storage-admin --user=michelle --clusterrole=storage-admin
 
+NOTE:
+Cluster role binding to a user or group(list of user). User can be a service account. 
+
 
 
 Service Account:
@@ -145,22 +154,21 @@ Service Account:
 NOTE:
 Under pod spec:  
 serviceAccountName: dashboard-sa
+Best practice to get the output into yaml when we create k8 abject through create not apply command
 
 Securing Images: 
----
+--->
 
 1. k create secret.   //docker registry 
-2.  kubectl create secret docker-registry private-reg-cred  --docker-server=myprivateregistry.com:5000  --docker-username=dock_user  --docker-password=dock_password   --docker-email=dock_user@myprivateregistry.com
+2. kubectl create secret docker-registry private-reg-cred  --docker-server=myprivateregistry.com:5000  --docker-username=dock_user  --docker-password=dock_password   --docker-email=dock_user@myprivateregistry.com
 3. k edit deployments web 
-
-
 
 Notes
  spec:
       containers:
       - image:myprivateregistry.com:5000/nginx:alpine
 ---
-:wq!
+:wq!  Forceful writing 
 ---
   imagePullSecrets:
   - name: regcred
@@ -176,8 +184,8 @@ Security Context:
 1.  whoami
 2. k exec ubuntu-sleeper -- whoami
 3. / to search in vim 
-4. k get pods ubuntu-sleeper -o yaml > ub.yaml
-5. k delete pod ubuntu-sleeper 
+4. k get pods ubuntu-sleeper -o yaml > ub.yaml // getting in yaml file make it easier for further updates. We have the configuration. 
+5. k delete pod ubuntu-sleeper --force
 6. 
 
 

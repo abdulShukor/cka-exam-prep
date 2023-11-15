@@ -30,7 +30,7 @@ NOTES:
     protocol: TCP
     targetPort: 3306
 
-Credential can be either save on database or on the web pod/deployment(as env) or in configmap 
+User credential can be either save on database or on the web pod/deployment(as env) or in configmap that accessing database
 Access app
 
 
@@ -56,16 +56,59 @@ vi /etc/kubernetes/manifests/kube-controller-manager.yaml
 k get pods
 
 
-
 Notes:
 Autocompletion // from Kubernetes cheat sheet 
 Alias 
 Service Account:  default
 Node:             <none>
 
-
  - hostPath:
       path: /etc/kubernetes/pki
+
+
+Node failure:
+k get nodes
+k describe node node01 
+service kubelet status 
+service kubelet start
+k get nodes
+service kubelet status
+journalctl -u kubelet
+journalctl -u kubelet -f
+cat /etc/kubernetes/kubelet.conf // kubelet use it to authenticate to cube api server 
+ls /var/lib/kubelet/
+cat  /var/lib/kubelet/config.yaml 
+cat /etc/kubernetes/pki/ca.crt 
+/var/lib/kubelet/config.yaml 
+service kubelet restart
+vi /etc/kubernetes/kubelet.conf
+server: https://controlplane:6443
+
+Notes:
+
+If node is unknown status that means that not connected with control plan. Check kubelet on worker node if its active. 
+Check status --> worker node --> kubelet --> logs 
+
+
+Network Troubleshooting:
+
+
+Note:
+
+DNS in Kubernetes:
+
+Notes:
+
+Kubernetes uses CoreDNS. CoreDNS is a flexible, extensible DNS server that can serve as the Kubernetes cluster DNS.
+Port 53 is used for for DNS resolution.
+
+Kubernetes resources for coreDNS are:   
+a service account named coredns,
+cluster-roles named coredns and kube-dns
+clusterrolebindings named coredns and kube-dns, 
+a deployment named coredns,
+a configmap named coredns and aservice named kube-dns.
+
 
 
 

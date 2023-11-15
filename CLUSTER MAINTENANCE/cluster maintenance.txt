@@ -9,19 +9,19 @@ OS UPGRADES:
 3. k get pods -o wide
 4. k drain node01 --ignore-daemonsets.  // Pods evicted from node01// Node node01 Unschedulable
 5. k get nodes
-6. k uncordon node01 -- only new pod will be scheduled on this node 
+6. k uncordon node01 // only new pod will be scheduled on this node 
 7. k get node controlplane 
-8. kubectl drain node01 --ignore-daemonsets --force - pod lost forever if not part of RC
+8. kubectl drain node01 --ignore-daemonsets --force // pod lost forever if not part of RC
 9. k get pods -o wide
-10. k cordon node01 - SchedulingDisabled the running pod will not evicted 
+10. k cordon node01 //SchedulingDisabled the running pod will not evicted 
 
 Note:
 
 Pod evicted 
 node01         Ready    SchedulingDisabled   <none>          12m   v1.27.0
 
-Pods from drained node will not come back automatically back to that node only new pod will placed. 
-Usually pod doesn't not scheduled on control node it has taint. 
+Pods from drained node will not come back automatically back to other nodes and only new pod will placed on drained node. 
+Usually pod doesn't scheduled on control node because it has taint. 
 Only drained pod that part of rs, deploy, daemon set, job, stateful set will be placed on other nodes. 
 
 We are not able to drain node that has pods other then replicas but we can delete forcefully but these pods will not come back or schedule on another node because its not part of RC. 
@@ -40,7 +40,7 @@ CLUSTER UPGRADE:
 3. k get deployment // application 
 4. kubeadm upgrade plan  // to see the remote version 
 5. k drain controlplane --ignore-daemonsets
-6. cat /etc/*release*.  Current OS version make sure to check before clutser update 
+6. cat /etc/*release*.  Current OS version make sure to check before cluster update 
 7. apt-get --version
 8. k get nodes     
 9. kubectl uncordon controlplane
@@ -48,6 +48,7 @@ CLUSTER UPGRADE:
 11. Exit from node01
 12. k uncordon node01
 13. k get nodes
+14. K describe node | grep Taints
 
 NOTE:
 
@@ -65,7 +66,7 @@ To updated worker node you need to be on worker node do ssh node01
 
 Kubelet may not alway run on control plan make sure to double check. 
 
-K get nodes // the version is kubelet version not cluster. We have manually upgrade kubelete and kubeadm doesn't do that but all other component does updated 
+K get nodes // the version is kubelet version not cluster. We have to manually upgrade kubelete and kubeadm doesn't do that but all other component does updated 
 
 We need go to control node to drain worker node 
 
@@ -91,25 +92,23 @@ Backup and Restore method 1:
 6. export ETCDCTL_API=3
 7. etcdctl snapshot restore --data-dir /var/lib/etcd-from-backup /opt/snapshot-pre-boot.db
 8. ls /var/lib/etcd-from-backup/
-9. vi /etc/kubernetes/manifests/etcd.yaml
+9. vi /etc/kubernetes/manifests/etcd.yaml. //pod definition file 
 10. k get pods -n kube-system --watch
 11. k delete pods -n kube-system etcd-controlplane -- if not restarted then delete and will restart. 
 
-Volumes on defination is node level 
+Volumes on definition is node level 
+VolumeMount is container level
+kubectl install on control plan to interact with Kubernetes. 
 
 
 Note:
-
 Address of ETCD and other certificates are under the Command -> etcd
 Node is the host for pod 
-
-The env var  should be set before running the command 
+The env var(export ETCDCTL_API=3) should be set before running the command 
 ETCDCTL_API=3 etcdctl snapshot or 
 export ETCDCTL_API=3
 etcdctl snapshot
-
 version of ETCD = Image: registry.k8s.io/etcd:3.5.7-0
-
 etcdctl snapshot save --endpoints=127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key /opt/snapshot-pre-boot.db
 
 1. The end point 
@@ -132,7 +131,8 @@ Backup and Restore method 2:
 3. kubectl config use-context cluster2
 4. ssh cluster2-controlplane -- exit from node
 5. kubectl=client, cluster=server
-6. k describe pod -n kube-system kube-apiserver-cluster1-controlplane 
+6. k describe pod -n kube-system kube-apiserver-cluster1-controlplane  // not running pod could server issue check the file in /etc/kubernetes/manifests/
+ssh cluster2-controlplane
 7. cd /etc/kubernetes/manifests/
 7. k describe pod -n kube-system kube-apiserver-cluster2-controlplane
 8. ssh etcd-server
@@ -143,8 +143,8 @@ Backup and Restore method 2:
 12. scp cluster1-controlplane:/opt/cluster1.db /opt/
 13. scp /opt/cluster2.db etcd-server:/root
 14. etcdctl snapshot restore /root/cluster2.db --data-dir /var/lib/etcd-data-new
-15. ls -la. // check etch-data-new owner ship
-16. chown -R etcd:etcd etcd-data-new/
+15. Ls or ls -la. // check etch-data-new owner ship
+16. chown -R etcd:etcd etcd-data-new/.   //ls -la
 17. vi /etc/systemd/system/etcd.service 
 18. --data-dir=/var/lib/etcd-data-new 
 19. systemctl daemon-reload 
@@ -166,8 +166,12 @@ systemctl status kubelet // check if its running on master node
 ps aux | grep kubelet.  // check if its running on master node 
 /etc/kubernetes/kubelet.conf //Node Configuration File
 
+--etcd-servers=https://192.27.84.21:2379
+k describe pod -n kube-system kube-apiserver-cluster2-controlplane
 
+K config view 
+Cluster --> nodes --> pods 
+k describe pods -n kube-system kube-apiserver-cluster1-controlplane
+ls /etc/kubernetes/manifests/ check her if etcd is part of staked 
 
-
-
-
+Restart all control plan component that make sure they are not using stall data

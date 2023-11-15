@@ -11,11 +11,10 @@ Explore environment:
 5. ip add show
 6. exit
 7. ip address show type bridge
-8.  ip route
+8. ip route
 9. netstat -npl | grep -i scheduler
 10. netstat -npa | grep -i etcd | grep -i 2379 | wc -l
 11. netstat -npa | grep -i etcd | grep -i 2380 | wc -l
-12. 
 
 Notes:
 
@@ -72,6 +71,7 @@ Service networking:
 5. cd /etc/kubernetes/manifests/
 6. cat kube-apiserver.yaml
 7. k logs kube-proxy-c4j8q -n kube-system 
+8.  k get all -A
 
 Note:
 --service-cluster-ip-range=10.96.0.0/12
@@ -85,7 +85,7 @@ COREDNS:
 4. k describe pods coredns-5d78c9869d-sglv9 -n kube-system 
 5. k get pods -n kube-system -o yaml
 6. k get cm -n kube-system
-7. controlplane ~ ➜  k describe cm coredns -n kube-system 
+7. k describe cm coredns -n kube-system 
 8. k describe svc web-service 
 9. k get svc -n payroll 
 10. k describe deployments.apps webapp 
@@ -113,7 +113,8 @@ Endpoints:         10.244.0.4:80
 Session Affinity:  None
 Events:            <none>
 
-Cluster.local // is the root domain 
+Cluster.local // is the root domain and its all in one 
+DB env setup 
 
 
  spec:
@@ -183,6 +184,7 @@ NOTES:
 We can deploy application as pod or deployment
 We need to deploy Ingress controller 
 Created role and role bindings for SA
+Ingress resource comes under the namespace scoped
 308 indicate redirect 
  annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /

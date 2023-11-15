@@ -1,0 +1,11 @@
+----------
+
+
+
+
+
+
+Notes:
+
+Pod networking 
+Vagrant to spin up bunch of vims 
