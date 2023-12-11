@@ -1,9 +1,7 @@
-
 -------------------
 
 OS UPGRADES:
----
-
+--->
 1. k get nodes
 2. k get deploy
 3. k get pods -o wide

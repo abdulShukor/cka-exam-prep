@@ -1,6 +1,5 @@
 
 -------------------
-
 Rolling updates:
 ---
 
@@ -74,6 +73,7 @@ spec:
   - envFrom:
     - configMapRef:
         name: webapp-config-map
+Application configuration: env
 
 
 Secret: 
@@ -105,8 +105,10 @@ Two types of ENV:
 
 Env: directly into pod
 
----
-    envFrom:                        //  injection from secret reference  into container 
+--- 
+
+ name: webapp
+ envFrom:                        //  injection from secret reference into container /imaf
     - secretRef:
        name: db-secret
 ---
@@ -114,7 +116,16 @@ Env: directly into pod
     - mountPath: /var/run/secrets/kubernetes.io/serviceaccount         // through volume of pod  then into container 
       name: kube-api-access-tmchx
       readOnly: true
+---
 
+  containers:
+  - image: kodekloud/simple-webapp-mysql
+    imagePullPolicy: Always
+    name: webapp
+    envFrom:
+      - secretRef:
+          name: db-secret
+    resources: {}
 
 Encrypting Secret Data at Rest:
 ---
@@ -161,6 +172,7 @@ spec:
       name: log-volume
     - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
 
+Use :wq! Forceful edit
 
 
 Init contianer:
@@ -194,5 +206,19 @@ First init container kicks in then main container(application) will be start aft
 Note: pod will be in pending until the the init-container finish their job. If there are multiple if finished their job one one and go the next one. It's under pod level spec not container. 
 
 k get pod orange  --dry-run=client -o yaml> orange.yaml // creating new in yaml definition vs k get pod orange   -o yaml> orange.yaml // getting already object in yaml
+
+Imperative commands:
+---------
+k create svc clusterip -h
+k expose pod redis --port=6379 --name=redis-service
+k create deployment webapp --image=kodekloud/webapp-color --replicas=3
+k run custom-nginx --image=nginx --port=8080
+k create deployment --image=redis redis-deploy -n dev-ns --replicas=2
+k run httpd --image=httpd:alpine --port=80 --expose=true
+
+
+
+
+
 
 

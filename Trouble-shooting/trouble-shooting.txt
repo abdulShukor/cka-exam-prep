@@ -109,6 +109,7 @@ clusterrolebindings named coredns and kube-dns,
 a deployment named coredns,
 a configmap named coredns and aservice named kube-dns.
 
+systemctl vs service
 
 
 

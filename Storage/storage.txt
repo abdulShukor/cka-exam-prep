@@ -19,12 +19,12 @@ Persistence Values and Persistence Claims:
 
 Note:
 
-Container level mounting
+ Inside Container level mounting
 - mountPath: /log
       name: log-volume
 
 
-Pod/node level volume hostPath 
+Pod/container level volume hostPath 
  volumes:
   - name: log-volume
     hostPath:
@@ -105,7 +105,7 @@ spec:
   resources:
     requests:
       storage: 500Mi
-  storageClassName: local-storage
+ 
 
 
 Lab
@@ -152,10 +152,26 @@ VOLUMEBINDINGMODE:
 
 PROVISIONER:
 
+****NOTE***
+
+  restartPolicy: Always
+  volumes:
+    - name: local-pvc-volume
+      persistentVolumeClaim:
+        claimName: local-pvc
+status: {}
 
 
+Vs  // Status mapping. First file is fine. The second one, mapping items must start at the same column which is not and will give an error 
 
+status: {}
+  volumes:
+    - name: local-pvc-volume
+      persistentVolumeClaim:
+        claimName: local-pvc
 
-
-
-
+Nested scoped - Indentation 
+Pod level 
+Container level 
+Image level 
+Volume - Container

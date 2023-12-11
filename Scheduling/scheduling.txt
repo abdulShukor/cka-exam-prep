@@ -58,7 +58,7 @@ Labels and selectors - Optional:
 2. k get pods --selector env=dev --no-headers | wc -l
 3. k get pods --selector bu=finance  --no-headers | wc -l
 4. k get all --selector env=prod  --no-headers 
-5. k get pods --selector bu=finance,env=prod,tier=frontend
+5. /tmp/kubectl-edit-4029001104.yaml
 
 
 Taints and Tolerations - Optional:
@@ -198,7 +198,7 @@ Static Pods: - Optional:
 7. k get pods -A
 9. cat /var/lib/kubelet/config.yaml to check static pod configuration 
 10. at /etc/kubernetes/manifests/kube-apiserver.yaml
-11. k run static-busybox --image=busybox --dry-run=client -o yaml --command -- sleep 1000  > static-busybox // anything after -- is not part kubectl
+11. k run static-busybox --image=busybox --dry-run=client -o yaml --command -- sleep 1000  > static-busybox // anything after -- is not part kubectl. 
 11.1 cp static-busybox /etc/kubernetes/manifests/
 12. vi /etc/kubernetes/manifests/static-busybox
 13. k delete pod static-greenbox-node01 using this way will delete the static and will recreate not deleting permanently 
