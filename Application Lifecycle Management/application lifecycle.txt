@@ -4,14 +4,13 @@ Rolling updates:
 ---
 
 1. k get deploy
-2. ./curl-test.sh // execute script 
+2. ./curl-test.sh // execute script . = root
 3. k edit deployment frontend 
 4. k set image deploy frontend simple-webapp=kodekloud/webapp-color:v2  // simple-webapp is container name 
 5. k set image deploy frontend simple-webapp=kodekloud/webapp-color:v3
 
 Note:
 RollingUpdateStrategy:  25% max unavailable, 25% max surge
-
 ---
 strategy:
     type: Recreate
@@ -23,28 +22,27 @@ Commands and arguments:
 2. k run webapp-green --image=kodekloud/webapp-color --  --color green
 
 Note:
-
+3 ways:
+---
     command: ["sleep", " 5000"]
 ---
     command:      // container scope 
     - "sleep"
     - "5000"
-
+---
     command: ["sleep"]
     args: ["5000"]
 
 All the elements in command must be string can't have number 
 
-K edit pod name with below or edit pod definition file directly 
-k replace --force -f file path
-Definition file command will override the entry point and the args will override the command. 
+Definition file command will override the entry point and the args will override the command of docker file/image. 
 
--- command: considering by the process running not by kubelet or Kubernetes  
+-- args considering by the process running not by kubelet or Kubernetes  
 
-k run webapp-green --image=kodekloud/webapp-color -- command -- python py.2 --color green // fi want to override the command 
+K run --help
+kubectl run nginx --image=nginx --command -- <cmd> <arg1> ... <argN> // -- meaning for application not kubectl 
+k run webapp-green --image=kodekloud/webapp-color --command -- python py.2 --color green // fi want to override the command 
 k run webapp-green --image=kodekloud/webapp-color --  --color green
-
-./webapp will execute the script that have the container color green
 
 
 Env:
@@ -54,7 +52,8 @@ Env:
 3. k replace --force -f /tmp/kubectl-edit-1020168777.yaml
 4. k describe cm db-config
 5. k create cm -h
-6. k create cm webapp-config-map --from-literal=APP_COLOR=darkblue
+6. k create cm webapp-config-map --from-literal=APP_COLOR=darkblue 
+ k create cm webapp-config-map --from-literal=APP_COLOR=darkblue --from-literal=APP_OTHER=disregard
 7. k describe cm webapp-config-map
 8. k replace --force -f /tmp/kubectl-edit-1898088499.yaml.  // add to yaml if more than one args or commands 
 9. 
@@ -65,14 +64,25 @@ data:
   APP_COLOR: darkblue
   APP_OTHER: disregard
 kind: ConfigMap
-
+---
+   env:
+    - name: DEMO_GREETING
+      value: "Hello from the environment"
 ----
 Note: 
 spec:
   containers:
   - envFrom:
     - configMapRef:
-        name: webapp-config-map
+        name: webapp-config-map  //4 indentation 
+---
+  - env:
+    - name: APP_COLOR
+      valueFrom:
+       configMapKeyRef:
+         name: webapp-config-map
+         key: APP_COLOR
+
 Application configuration: env
 
 

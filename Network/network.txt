@@ -1,8 +1,7 @@
 --------------
 
 Networking:
-
-
+---
 Explore environment:
 1. k get nodes -o wide 
 2. ip add show
@@ -17,8 +16,16 @@ Explore environment:
 11. netstat -npa | grep -i etcd | grep -i 2380 | wc -l
 
 Notes:
-
+A network interface/ is the point of interconnection between a computer and a private or public network. A network interface is a critical component that allows devices to connect to and communicate over computer networks. It can be physical, such as an Ethernet adapter, or virtual, as seen in virtualized environments with virtual NICs.
+---
+A bridge is a Layer 2 device that connects and manages traffic between distinct network segments. A network encompasses the entire interconnected infrastructure of devices, and a network interface serves as a specific point through which a device connects to and communicates within the network.
+---
+Switch has more ports then bridge 
+bridge: It creates an internal bridge network that allows containers to communicate with each other.
+Hub --> bridge --> switch --> gateways
 interface/bridge =eth0
+route=default gateway 
+---
 
 CNI:
 1. ps -aux | grep -i kubelet | grep container-runtime
@@ -26,6 +33,8 @@ CNI:
 3.ls /etc/cni/net.d/
 4. cat 10-flannel.conflist 
 
+Note:
+All plug in /opt/cni/bin/
 
 Deploy CNI:
 1. wget https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
@@ -34,8 +43,8 @@ Deploy CNI:
 4. k describe cm kube-proxy  -n kube-system 
 5. k get pods -n kube-system
 
-
 Note:
+Kubernetes-proxy config file 
 https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
 ---
 
@@ -78,7 +87,6 @@ Note:
 
 
 COREDNS:
-
 1. k get pods -n A
 2. k get pods -n kube-system
 3. k get svc -n kube-system 
@@ -96,7 +104,6 @@ COREDNS:
 
 
 NOTES:
-
 Name:              web-service
 Namespace:         default
 Labels:            <none>
@@ -114,8 +121,6 @@ Session Affinity:  None
 Events:            <none>
 
 Cluster.local // is the root domain and its all in one 
-DB env setup 
-
 
  spec:
       containers:
@@ -125,6 +130,9 @@ DB env setup
 
 
 Ingress Netwrok:
+
+Ingress controller vs ingress resources. Ingress controller running as pod but the resources
+
 
 1. k get deploy -A
 2. k get pods -n ingress-nginx
@@ -145,9 +153,12 @@ Ingress Netwrok:
 
 
 NOTES:
-
-Ingress controller(Kube-system) and Ingress resources 
-Default service on ingress 
+1. Ingress controller
+2. Ingress resources 
+Default service on ingress (note: check if configured)
+Best practice to create their own ingress resources for each namespace. 
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
 ---
       - backend:
           service:
@@ -157,16 +168,11 @@ Default service on ingress
         path: /eat
         pathType: Prefix
 
-Best practice to create their own ingress resources. 
-
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /.
-
 
 Ingress networking 2:
 1. k get pods -A 
 2. k create ns ingress-nginx
-3.  k create cm ingress-nginx-controller -n ingress-nginx 
+3. k create cm ingress-nginx-controller -n ingress-nginx 
 4. k create sa ingress-nginx -n ingress-nginx 
 5. k get role -n ingress-nginx 
 6. k get rolebindings  -n ingress-nginx 
@@ -180,11 +186,10 @@ Ingress networking 2:
 
 
 NOTES:
-
 We can deploy application as pod or deployment
 We need to deploy Ingress controller 
-Created role and role bindings for SA
+Created role and role bindings and SA
 Ingress resource comes under the namespace scoped
-308 indicate redirect 
+indicate redirect 
  annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /

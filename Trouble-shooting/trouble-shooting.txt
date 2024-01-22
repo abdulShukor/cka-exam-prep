@@ -57,8 +57,10 @@ k get pods
 
 
 Notes:
+All certificates are on hosts and configure as volume into pod/container. 
 Autocompletion // from Kubernetes cheat sheet 
 Alias 
+---
 Service Account:  default
 Node:             <none>
 
@@ -73,9 +75,9 @@ service kubelet status
 service kubelet start
 k get nodes
 service kubelet status
-journalctl -u kubelet
+journalctl -u kubelet --pager-end
 journalctl -u kubelet -f
-cat /etc/kubernetes/kubelet.conf // kubelet use it to authenticate to cube api server 
+cat /etc/kubernetes/kubelet.conf // kubelet use it to authenticate to kube api server 
 ls /var/lib/kubelet/
 cat  /var/lib/kubelet/config.yaml 
 cat /etc/kubernetes/pki/ca.crt 
@@ -85,19 +87,29 @@ vi /etc/kubernetes/kubelet.conf
 server: https://controlplane:6443
 
 Notes:
+Check first kubelet severe if it running or not. Second view the logs of kubelet service.
+
+vi /etc/kubernetes/kubelet.conf 
+/var/lib/kubelet/config.yaml
+Importan to restart kubletet 
+
+
+Systemclt is the modern of service
 
 If node is unknown status that means that not connected with control plan. Check kubelet on worker node if its active. 
 Check status --> worker node --> kubelet --> logs 
+Kubelet is the agent that report to control plane 
 
 
 Network Troubleshooting:
-
-
 Note:
 
 DNS in Kubernetes:
 
 Notes:
+
+--config=/var/lib/kube-proxy/config.conf //kubeproxy config location 
+k edit ds -n kube-system 
 
 Kubernetes uses CoreDNS. CoreDNS is a flexible, extensible DNS server that can serve as the Kubernetes cluster DNS.
 Port 53 is used for for DNS resolution.
@@ -110,6 +122,13 @@ a deployment named coredns,
 a configmap named coredns and aservice named kube-dns.
 
 systemctl vs service
+---
+Json path
+
+$ start at begging but optional with jsonpath 
+. Meaning root and its dictionary. If its list then just $ at the begging of quarry 
+?()= filtering 
+@ each item // looping through 
 
 
 

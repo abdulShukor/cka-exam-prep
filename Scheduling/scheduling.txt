@@ -142,7 +142,6 @@ Note: cannot edit running pod but when edit it save a temporary copy of  the cha
 
 1. We can delete  and recreate pod
 2. --force killed the existing pod and recreate (k replace --force -f /tmp/kubectl-edit-4096856426.yaml) 
-
 Container = process running in memory 
 
 
@@ -229,10 +228,7 @@ k get pod -n kube-system kube-apiserver-controlplane -o yaml
     kind: DaemonSet // part of DaemonSet
     name: kube-proxy
 
-
-StaticPodPath: /etc/just-to-mess-with-you
-What is the path of the directory holding the static pod definition files?
-
+StaticPodPath: config //var/lib/kubelet/config.yaml
 kubelet.config.k8s.io/v1beta1: // kubelet create static pod 
 staticPodPath: /etc/kubernetes/manifests: this is that dir that create the pod 
 
@@ -262,7 +258,7 @@ leaderElection:
 
 ---
 spec:
-  schdulerName: my-scheduler
+  schedulerName: my-scheduler
   containers:
   - image: nginx
     name: nginx

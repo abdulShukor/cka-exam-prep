@@ -1,0 +1,128 @@
+
+
+Lab1:
+---
+kubectl describe node controlplane | grep -i taint
+kubectl -n admin2406 get deployment -o custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[].image,READY_REPLICAS:.status.readyReplicas,NAMESPACE:.metadata.namespace --sort-by=.metadata.name > /opt/admin2406_data
+kubectl create deployment  nginx-deploy --image=nginx:1.16
+kubectl set image deployment/nginx-deploy nginx=nginx:1.17 --record
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-alpha-pvc
+  namespace: alpha
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: slow
+---
+etcdctl snapshot save --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --endpoints=127.0.0.1:2379 /opt/etcd-backup.db
+kubectl run secret-1401 -n admin1401 --image=busybox --dry-run=client -o yaml --command -- sleep 4800 > admin.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: secret-1401
+  name: secret-1401
+  namespace: admin1401
+spec:
+  volumes:
+  - name: secret-volume
+    # secret volume
+    secret:
+      secretName: dotfile-secret
+  containers:
+  - command:
+    - sleep
+    - "4800"
+    image: busybox
+    name: secret-admin
+    # volumes' mount path
+    volumeMounts:
+    - name: secret-volume
+      readOnly: true
+      mountPath: "/etc/secret-volume"
+NOTES:
+Creating pod imperative way the name of container will same as the pod name but for deployment the name of container will the whatever the image name is. 
+
+
+LAB1.1:
+---
+kubectl expose deployment hr-web-app --type=NodePort --port=8080 --name=hr-web-app-service --dry-run=client -o yaml > hr-web-app-service.yaml
+kubectl get nodes -o jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/nodes_os_x43kj56.txt
+kubectl run messaging --image=redis:alpine -l tier=msg
+k run redis --image  redis:alpine --labels "tier=db"
+
+Notes:
+K logs pods container 
+Random node port from command line will populated when type=NodePort
+If save command without execution(# k get pods)  then enter # in-front of it 
+
+
+LAB3:
+---
+    volumeMounts:
+    - mountPath: /data/redis
+      name: temp-volume
+  volumes:
+  - name: temp-volume
+    emptyDir: {}
+
+securityContext:
+      capabilities:
+        add: ["SYS_TIME"]
+
+kubectl run nginx-resolver --image=nginx
+kubectl expose pod nginx-resolver --name=nginx-resolver-service --port=80 --target-port=80 --type=ClusterIP
+etcdctl snapshot save --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key /opt/etcd-backup.db
+Snapshot saved at /opt/etcd-backup.db
+export ETCDCTL_API=3 
+
+NOTES:
+Cat etcd | grep file 
+Rolebinding 
+Always refer to docs 
+Use --help
+Auth can -I --as=dev
+
+
+LAB3::
+---
+kubectl certificate approve john-developer
+$ kubectl create role developer --resource=pods --verb=create,list,get,update,delete --namespace=development
+$ kubectl create rolebinding developer-role-binding --role=developer --user=john --namespace=development
+$ kubectl auth can-i update pods --as=john --namespace=development
+
+kubectl run nginx-resolver --image=nginx
+kubectl expose pod nginx-resolver --name=nginx-resolver-service --port=80 --target-port=80 --type=ClusterIP
+kubectl run test-nslookup --image=busybox:1.28 --rm -it --restart=Never -- nslookup nginx-resolver-service
+kubectl run test-nslookup --image=busybox:1.28 --rm -it --restart=Never -- nslookup nginx-resolver-service > /root/CKA/nginx.svc
+kubectl get pod nginx-resolver -o wide
+kubectl run test-nslookup --image=busybox:1.28 --rm -it --restart=Never -- nslookup <P-O-D-I-P.default.pod> > /root/CKA/nginx.pod
+
+kubectl run nginx-critical --image=nginx --dry-run=client -o yaml > static.yaml
+root@controlplane:~# scp static.yaml node01:/root/
+mkdir -p /etc/kubernetes/manifests
+vi /var/lib/kubelet/config.yaml
+root@node01:~# cp /root/static.yaml /etc/kubernetes/manifests/
+k run curl --image=alpine/curl --rm -it -- sh
+NOTES:
+--serviceaccount=name: role binding 
+K get ns
+K get nodes --kubeconfig path 
+---
+k get nodes -o jsonpath='{.items[*].status.addresses[0].address}'
+k get nodes -o jsonpath='{.items[*].status.addresses[*].address}'
+k get nodes -o json | jq | grep -i internalip -B 100
+k get nodes -o json | jq | more
+k get nodes -o json | jq -c 'paths' | grep type
+k get nodes -o json | jq -c 'paths' | grep type | grep -v conditions
+k get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}'
+---
+

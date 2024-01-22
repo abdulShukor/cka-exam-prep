@@ -15,16 +15,13 @@
 13. cat /etc/kubernetes/manifests/etcd.yaml | grep server-certificate.crt
 14. vi  /etc/kubernetes/manifests/etcd.yaml
 15. crictl ps -a | grep kube-apiserver
-16. 
-
-17. vi /etc/kubernetes/manifests/kube-apiserver.yaml // etcd and api server has its own ca certificate
-
+16. vi /etc/kubernetes/manifests/kube-apiserver.yaml // etcd and api server has its own ca certificate
+17. crictl logs f940342fedcb8
 
 Note:
-
 /PKI dir // kubernetes  API sever 
 /PKI/etcd.  For etcd
-Etcd has its own CA and so the API sever had its own 
+Etcd has its own CA and the API sever had its own 
 
  ls /etc/kubernetes//pki/etcd/ca.crt 
  ls /etc/kubernetes//pki/etcd/
@@ -39,14 +36,14 @@ CERTIFICATES API
 2. cat > akshay.yaml
 3. k certificate approve akshay
 4. k get csr
-5. k get csr agent-smith -o yaml
+5. k get csr agent-smith -o yaml.  // if no yaml exit for the object
 6. k certificate deny agent-smith
 7. k delete csr agent-smith      
 
 Note:
 No imperative commands 
-
 ---
+
 apiVersion: certificates.k8s.io/v1
 kind: CertificateSigningRequest
 metadata:
@@ -56,7 +53,6 @@ spec:
   signerName: kubernetes.io/kube-apiserver-client
   usages:
   - client auth
-
 
 KUBECONFIG:
 ---
@@ -71,12 +67,11 @@ KUBECONFIG:
 
 NOTE:
 We can have multiple config file. 
-.kube/config  I shte default config file 
+.kube/config  is default config file 
 
 
 RBAC:
 --
-
 1. cat /etc/kubernetes/manifests/kube-apiserver.yaml 
 2.  - --authorization-mode=Node,RBAC
 3. ps -aux | grep authorization
@@ -93,10 +88,7 @@ RBAC:
 14. k edit role -n blue developer 
 15. k describe role -n blue developer
 
-
 NOTE:
-
-
 - apiGroups:
   - "apps"
   resources:
@@ -106,8 +98,7 @@ NOTE:
   - watch
   - create
   - delete
-
-
+---
 - apiGroups:
   - "apps"
   resourceNames:
@@ -119,6 +110,8 @@ NOTE:
   - watch
   - create
   - delete
+
+For everything '*'
 
 CLUSTER:
 ---
@@ -134,14 +127,12 @@ CLUSTER:
 10. k describe clusterrole michelle-role 
 11.  k describe clusterrolebindings.rbac.authorization.k8s.io  michelle-role-binding 
 12. k api-resources 
-13. k create clusterrole storage-admin --resource=persistentvolumes,storageclasses --verb=list,create,get,watch
+13. k create clusterrole storage-admin --resource=persistentvolumes,storageclasses --verb=list,create,get,watch  //lower cases resources
 14. k get clusterrole storage-adminn -o yaml
 15. k create clusterrolebinding michelle-storage-admin --user=michelle --clusterrole=storage-admin
 
 NOTE:
 Cluster role binding to a user or group(list of user). User can be a service account. 
-
-
 
 Service Account:
 ---
@@ -150,11 +141,14 @@ Service Account:
 3. k create serviceaccount dashboard-sa
 4. ls /var/rbac
 5. kubectl create token dashboard-sa
+k describe pods web-dashboard-97c9c59f6-8ttv8. // service account is on pod not deploy 
 
 NOTE:
 Under pod spec:  
+By default all pods while creating we have default service account. Default service account has limited access. 
 serviceAccountName: dashboard-sa
 Best practice to get the output into yaml when we create k8 abject through create not apply command
+For service account we added role and rolebinding or clusterrole and clusterrilebinding 
 
 Securing Images: 
 --->
@@ -176,6 +170,7 @@ Notes
     spec:
       imagePullSecrets:
       - name: private-reg-cred
+Under spec and at container level indentition 
 
 
 Security Context:
@@ -187,7 +182,6 @@ Security Context:
 4. k get pods ubuntu-sleeper -o yaml > ub.yaml // getting in yaml file make it easier for further updates. We have the configuration. 
 5. k delete pod ubuntu-sleeper --force
 6. 
-
 
 Note:
   securityContext: 
@@ -215,8 +209,8 @@ Network Policies:
 
 
 Note:
-We cannot ping Payroll pod from internal pod 
-ingress incoming traffic and egress is outgoing traffic from pod
+** We cannot ping Payroll pod from internal pod ** 
+ingress is incoming traffic and egress is outgoing traffic from pod
 
 Lab
 ---

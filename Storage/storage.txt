@@ -105,7 +105,7 @@ spec:
   resources:
     requests:
       storage: 500Mi
- 
+  storageClassName: local-storage
 
 
 Lab
@@ -169,9 +169,17 @@ status: {}
     - name: local-pvc-volume
       persistentVolumeClaim:
         claimName: local-pvc
+**NOTES**
 
+Check if pv is provision by storage class(k get pv)  or static provisioned 
 Nested scoped - Indentation 
 Pod level 
 Container level 
 Image level 
 Volume - Container
+
+
+
+
+
+

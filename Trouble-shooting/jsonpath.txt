@@ -1,0 +1,62 @@
+---
+Root elements can be in dictionary or list
+If dictionary then start with . 
+With list we put []
+$ start of jpath 
+Filtering $()
+[?(@.name == 'test')]
+@ each element in list(similar to loop) 
+{"/t"}
+{"/n"}
+---
+List:
+1. [0]
+2. [*]
+3. [0,3]
+4. [1:5]
+5. [-1:]
+6. [-1:0]
+---
+Custom-columns
+Custom-columns:NODE:.
+$ not required with jsonPath 
+--sort-by=.spec.name
+
+Double quotation when you have single quotation in query 
+cat q5.json | jpath $.car.wheels[*] vs cat q5.json | jpath $.car.wheels
+jpath $[0](root is list) vs jpath $.[0](root is dict)
+
+cat q13.json | jpath $[0,3]
+[
+  "bike"
+]
+Having single quotation around 
+Values are string 
+cat q13.json | jpath  '$[0,3]'
+[
+  "car",
+  "bike"
+]
+
+kubectl config view --kubeconfig=my-kube-config -o jsonpath="{.contexts[?(@.context.user=='aws-user')].name}" //.name going one level up
+
+employee: //dict-record
+  name: john
+  gender: male
+  age: 24
+
+Name: abc //string 
+
+employees:
+  - name: john
+    gender: male
+    age: 24
+  - name: sarah
+    gender: female
+    age: 28
+jpath  $.* vs $[*]
+jpath '$[*].model'
+
+Root elementa:
+Dict {}
+List []

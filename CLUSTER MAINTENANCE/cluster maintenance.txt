@@ -14,21 +14,15 @@ OS UPGRADES:
 10. k cordon node01 //SchedulingDisabled the running pod will not evicted 
 
 Note:
-
-Pod evicted 
-node01         Ready    SchedulingDisabled   <none>          12m   v1.27.0
-
+---
 Pods from drained node will not come back automatically back to other nodes and only new pod will placed on drained node. 
 Usually pod doesn't scheduled on control node because it has taint. 
 Only drained pod that part of rs, deploy, daemon set, job, stateful set will be placed on other nodes. 
-
+---
 We are not able to drain node that has pods other then replicas but we can delete forcefully but these pods will not come back or schedule on another node because its not part of RC. 
-
 Simple pod cannot be rescheduled 
-
 ---
 Static pod will be recreated by kubelet if we delete only possible to delete permanently if we remove the yaml From the configuration path 
-
 
 CLUSTER UPGRADE:
 ---
@@ -49,39 +43,28 @@ CLUSTER UPGRADE:
 14. K describe node | grep Taints
 
 NOTE:
-
 Node and control plan = VMs
-
 Upgrade one node at a time while moving the workloads to the other
-
-
 kubeadm upgrade apply v1.26.8
 remote version is much newer: v1.28.1
-
+---
 https://v1-27.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
 kubeadm=1.27.x-00 replace x with patch version 
 To updated worker node you need to be on worker node do ssh node01
-
 Kubelet may not alway run on control plan make sure to double check. 
-
+Ps -ef | grep kubelet
+---
 K get nodes // the version is kubelet version not cluster. We have to manually upgrade kubelete and kubeadm doesn't do that but all other component does updated 
-
 We need go to control node to drain worker node 
-
 Kubelet is a process(daemon) running in background and control by systemd. 
-
 kubeadm version // show version of kabeadm
-
+---
 [upgrade/versions] Cluster version: v1.26.0
 [upgrade/versions] kubeadm version: v1.27.0
 
 
-
-
-
-Backup and Restore method 1:
+*** Backup and Restore method 1 ***:
 ---
-
 1. k get pods -n kube-system
 2. k describe pod -n kube-system etcd-controlplane // ETCD version the image version.
 3. ETCDCTL_API=3 etcdctl snapshot
@@ -93,11 +76,7 @@ Backup and Restore method 1:
 9. vi /etc/kubernetes/manifests/etcd.yaml. //pod definition file 
 10. k get pods -n kube-system --watch
 11. k delete pods -n kube-system etcd-controlplane -- if not restarted then delete and will restart. 
-
-Volumes on definition is node level 
-VolumeMount is container level
 kubectl install on control plan to interact with Kubernetes. 
-
 
 Note:
 Address of ETCD and other certificates are under the Command -> etcd
@@ -119,10 +98,11 @@ etcdctl snapshot save --endpoints=127.0.0.1:2379 --cacert=/etc/kubernetes/pki/et
       type: DirectoryOrCreate
     name: etcd-data
 
+etcdctl  snapshot restore --data-dir /var/lib/etcd-from-backup /opt/snapshot-pre-boot.db
+ls /var/lib/etcd
+vi /etc/kubernetes/manifests/etcd.yaml 
 
-
-Backup and Restore method 2:
-
+*** Backup and Restore method 2 ***:
 ---
 1. k config view // view all clusters 
 2. kubectl config use-context cluster1
@@ -136,6 +116,9 @@ ssh cluster2-controlplane
 8. ssh etcd-server
 9. ps -ef | grep -i etcd
 10. etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/etcd/pki/ca.pem --cert=/etc/etcd/pki/etcd.pem --key=/etc/etcd/pki/etcd-key.pem member list.  //How many nodes are part of the ETCD cluster that etcd-server(remote server) is a part of?
+
+*** https://127.0.0.1:2379 ***
+We are Logged in to the host(127.0.0.1. referring to itself) not remote logging. Remote logging will be have having deferent ip like https://192.31.104.21:2380 
 
 11. etcdctl --endpoints=https://192.29.159.24:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key snapshot save  /opt/cluster1.db
 12. scp cluster1-controlplane:/opt/cluster1.db /opt/
@@ -154,22 +137,22 @@ ssh cluster2-controlplane
 24. systemctl restart kublet
 25. systemctl status kubelet
 
-Note:
 
+Note:
 Stacked ETCD = local running as pod on control plane 
 External ETCT = --etcd-servers=https://192.29.159.15:2379
 Date dir = --data-dir=/var/lib/etcd 
-
+---
 systemctl status kubelet // check if its running on master node 
 ps aux | grep kubelet.  // check if its running on master node 
 /etc/kubernetes/kubelet.conf //Node Configuration File
-
+---
 --etcd-servers=https://192.27.84.21:2379
 k describe pod -n kube-system kube-apiserver-cluster2-controlplane
-
+---
 K config view 
 Cluster --> nodes --> pods 
 k describe pods -n kube-system kube-apiserver-cluster1-controlplane
 ls /etc/kubernetes/manifests/ check her if etcd is part of staked 
-
+---
 Restart all control plan component that make sure they are not using stall data

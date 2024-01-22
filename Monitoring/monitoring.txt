@@ -24,4 +24,5 @@ Logs:
 
 Note:
 
+Watch for logs warning/error/info messages 
 If pod has two or more containers you must specify the container name for retrieving logs. Pod name following container name 
