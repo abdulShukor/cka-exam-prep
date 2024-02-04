@@ -1,0 +1,42 @@
+
+  ...
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          user: alice
+      podSelector:
+        matchLabels:
+          role: client
+  ...
+
+Allowed ingress from pod that has labels role: client and that exit in namespace with label user: alice. All one item in the list. Pod from namespace 
+
+ ...
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          user: alice
+    - podSelector:
+        matchLabels:
+          role: client
+  ...
+
+All the pods from from namespace with label  user: are allowed 
+Pod in local scope with label is allowed role: client
+Two item in the list 
+
+ kubectl label namespace frontend namespace=frontend
+ kubectl label namespace backend namespace=backend
+
+
+    - namespaceSelector:
+        matchLabels:
+          project: myproject
+
+ - namespaceSelector:
+        matchExpressions:
+        - key: namespace
+          operator: In
+          values: ["frontend", "backend"]

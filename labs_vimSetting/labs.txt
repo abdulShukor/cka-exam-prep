@@ -64,7 +64,6 @@ K logs pods container
 Random node port from command line will populated when type=NodePort
 If save command without execution(# k get pods)  then enter # in-front of it 
 
-
 LAB3:
 ---
     volumeMounts:
@@ -125,4 +124,32 @@ k get nodes -o json | jq -c 'paths' | grep type
 k get nodes -o json | jq -c 'paths' | grep type | grep -v conditions
 k get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}'
 ---
+
+Wild card can be used for both dictionary and list. Like '.*.price' -- Step by step approach for making query 
+cat q1.json | jpath $.*
+cat q2.json | jpath $.*.color
+cat q3.json | jpath $.vehicles.*.color
+cat q4.json | jpath '$[*].model' start json with list vs dictionary 
+cat q6.json | jpath $.*.wheels[*].model 
+cat q7.json | jpath $.employee.payslips[*].amount vs cat q7.json | jpath $.*.payslips[*].amount
+cat q9.json | jq -c paths| grep -i firstname - ["prizes",0,"laureates",0,"firstname"]
+cat q9.json | jpath $.prizes[?(@.year=="2014")].laureates[*].firstname
+cat input.json | jpath '$[-8:-2]'
+cat input.json | jpath '$[-5:].age'
+
+**Merging two or more query for jsonpath to give single result** '{q1}{q2}"
+[0:8] print 0-7. 8 not inclusive 
+[0:8:2] increment the counter twice before the next number 
+Last item is always -1 then -2 -3
+[-1:0]  vs [-1:] [-9:]  vs [-9:-2]
+
+** $[0:4] vs $[0,4] **
+
+JQ
+---
+cat q9.json | jq | grep -i Kailash -B 100
+at q9.json | jq -c paths| grep -i firstname
+
+
+
 

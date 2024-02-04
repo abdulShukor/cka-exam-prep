@@ -1,0 +1,17 @@
+a) Workload placement and scheduling - NodeAffinity/Anti-Affinity, PodAffinity/Anti-Affinity, Node Selectors, Node Taints and Pod Tolerations
+
+b) Cluster administration: Setting up multi-node cluster. Installing/upgrading kubeadm, kubelet, kubectl. Cluster backup and restore of etcd for stacked and external etcd.
+
+c) RBAC: Service accounts, cluster roles, role bindings and namespace scoped RBAC. Certificate signing requests, approvals etc.
+
+d) Networking: CNI plugins like Calico or Weave to implement n/w ingress and egress policies. Determine which pods/services can communicate to what other services and restrict others. Setting up Ingress controller/Nginx to expose service outside of cluster.
+
+e) Ephemeral and persistent storage: Setting up persistent volume, claims and binding it to pods. Shared ephemeral storage for multi-container pods w/ emptyDir. Side car pattern to enable logging delegation for separation of concern.
+
+f) Triaging and lots of triaging: Cluster is down! Triage kubelet, kube-apiserver, kube-controller, etcd etc. to fix the cluster. Deployment is not scaling, most likely a node taint or PV or scheduler issue.
+
+g) Configmaps and Secrets: Setting up configmaps, secrets and mounting them to pod either as volume or exposing them through env variables
+
+If you're looking to prepare for #CKA, here's what worked for me:
+
+> Watch Saiyam Pathak 's Kubernetes 101 workshop on youtube

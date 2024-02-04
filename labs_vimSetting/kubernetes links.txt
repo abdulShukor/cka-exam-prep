@@ -1,0 +1,302 @@
+https://www.qwerty.md/kubernetes.html
+-------------------------------------
+Note:
+kubectl run admin-pod --image=busybox --command sleep 3200 --dry-run=client -o yaml > admin-pod.yaml
+You can connect to pod to check for token or certificates
+kubectl config --kubeconfig=/root/TEST/test.kubeconfig get nodes
+kubectl describe deploy web-proj-268 | grep -i image
+kubectl rollout history deployment web-proj-268
+
+Drain vs cordon and uncordon. Drain the node(remove the pods) and makes unscheduled but cordons is not draining just do unscheduled(new pods will not be secluded but the existence will stay.
+
+User account vs service account 
+Ssh node01
+ps aux | grep -i kubelet
+get the configuration path from --config=/var/lib/kubelet/config.yaml in this case
+Get the static pods path:
+cat /var/lib/kubelet/config.yaml|grep staticPod 
+grep staticPod /var/lib/kubelet/config.yaml
+staticPodPath: /etc/kubernetes/manifests
+
+kubectl exec -it my-app cat /var/run/secrets/kubernetes.io/serviceaccount/token
+kubectl describe node master | grep Taint
+Taints and tolerations are used to set restrictions on what pods can be scheduled on a node. Taints are set on nodes, tolerations - on pods.
+Verify: always 
+
+kubectl -n defence describe po delta-pod | grep -i image
+The tip could save some time on the certification exams:
+kubectl -n finance delete po finance --grace-period=0 --force
+
+kubectl run nslookup --image=busybox:1.28 --command sleep 4800
+kubectl exec -it nslookup -- nslookup web-pod-svc > /root/web-svc.svc
+Verify the output:
+cat /root/web-svc.svc
+---
+scp /etc/kubernetes/manifests/static,yaml node01:/etc/kubernetes/manifests/static.yaml
+rm /etc/kubernetes/manifests/static,yaml
+STATUS CrashLoopBackOff: something wrong with pod not the application running in pod 
+kubectl run nslookup --image=busybox:1.28 --command sleep 4800
+kubectl exec -it nslookup -- nslookup web-pod-svc
+kubectl exec -it nslookup -- nslookup web-pod-svc > /root/web-svc.svc
+Verify:
+cat /root/web-pod.pod
+
+systemctl status kubelet
+systemctl start kubelet
+systemctl status kubelet
+kubectl -n space get po --as alok
+journalctl -u kubelet
+---
+failed to load kubelet config file /var/lib/kubelet/config.yaml
+View this file and inspect it:
+---
+we can see that the volume mypvlog is in the Bound state and it's claim to default/pv-claim-log.
+Note that the PVCs are namespaced so the namespace should be custom and not default.
+So - to fix this, it is needed to recreate PV and PVC. PVC should be in namespace custom:
+---
+kubectl describe node controlplane | grep -i taint
+kubectl describe node node01 | grep -i taint
+kubectl get po nginx-pod -o yaml > po.yaml
+Add the following toleration to it:
+...
+spec:
+  tolerations:
+  - key: "color"
+    operator: "Equal"
+    value: "blue"
+    effect: "NoSchedule"
+..
+---
+Unscheduled  the nodes so no pod can be scheduled on it 
+kubectl cordon worker-node-1
+kubectl cordon worker-node-2
+Now, revert the changes and uncordon nodes:
+kubectl uncordon worker-node-1 vs taint on node. For daemon set we have to taint cause as soon the nodes get online daemon will placed on it.
+kubectl uncordon worker-node-2 
+---
+To make node unschedulable for DaemonSet, we must taint it:
+kubectl taint node worker-node-3 env=qa:NoSchedule
+---
+kubectl run front-end-helper --image=busybox -it --rm --restart=Never -- /bin/sh -c 'echo binaries downloaded successfully' > front-end-helper-log.txt
+k run test --image=busybox -it --rm --restart=Never -- /bin/sh -c  'echo binaries downloaded successfully' -c meaning treated as a command to be executed by the shell
+
+Check the file:
+cat front-end-helper-log.txt
+Pod deleted
+
+-----------------------------
+kubectl get po,svc
+kubectl get nodes -o json | jq ".items[]|{name:.metadata.name, taints:.spec.taints}"
+NetworkPolicy: check labels if not working 
+
+wget to download 
+Curl to https requests 
+kubectl exec -it apicheck -- wget http://web-pod
+If not have svc then we can do http://localhost:hostport:aplicationlisteningport or127.0.0.1:8000:80
+
+Accept all request from all pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-to-web-test
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - ports:
+    - protocol: TCP
+      port 80
+kubectl create secret generic sec1 --from-literal=password=CKA123
+Verify if Secret is mounted as volumes:
+kubectl exec -it pod-sec-file -- ls /secrets
+kubectl exec -it pod-sec-file -- cat /secrets/password
+
+Http://svc:nodeport
+
+kubectl exec -it pod-sec-env -- env //viewing env(40)
+
+Create config.txt:
+key1=value1
+key2=value2
+kubectl create cm newcfgmap --from-file=config.txt //encoded 64
+
+openssl x509 -in /var/lib/kubernetes/certs/etcd/ca.crt -text
+
+Passing	 deployment: very by Under the Condition can be seen: Progressing  Unknown  DeploymentPaused
+
+command: ["/bin/sh"]
+args: ["-c", "while true; do echo $(date -u) 'Hi I am from sidec-container' >> /var/log/index.log; sleep 5; done"]
+
+Construct query to get all contexts:: kubectl config get-contexts --no-headers|awk '{print $2}'
+echo "kubectl config current-context" > /opt/context_default_kubectl.sh
+bash /opt/context_default_kubectl.sh
+
+To get the current context without using kubectl:
+cat ~/.kube/config |grep current-context
+cat ~/.kube/config |grep current-context | awk '{print $2}'
+echo "cat ~/.kube/config |grep current-context | awk '{print $2}'" > /opt/context_default_no_kubectl.sh
+bash /opt/context_default_no_kubectl.sh
+
+nodeName: cluster1-master1
+------
+kubectl -n project-c13 get all
+Can be observed that 2 pods and a StatefulSet that created those pods - o3db. Scale it:
+kubectl -n project-c13 scale sts o3db --replicas=1
+Verify:
+kubectl -n project-c13 get all
+
+
+To decode the values use:
+$ echo -n "cHJvZA==" | base64 -d
+echo -n  "name" | base64
+
+k explain pod
+
+spec:
+  containers:
+    - name: nginx-container
+      image: nginx
+  schedulerName: custom-scheduler
+
+etcdctl --write-out=table snapshot status /opt/snapshot-pre-boot.db
+
+k apply -f dp.yaml --record
+
+ps aux  | grep -i kube-scheduler
+
+k port-forward portforwad-64c9675849-kdx7n  8005:80
+Forwarding from 127.0.0.1:8005 -> 80
+curl 127.0.0.1:8005
+
+k api-resources --namespaced=false
+
+echo "kubectl top pods --containers" > /opt/course/pod.sh
+bash /opt/course/node.sh
+ps aux|grep kubelet|grep -i  config
+grep -i staticPod /var/lib/kubelet/config.yaml
+ls -la /etc/kubernetes/manifests/
+
+kubelet: process
+kube-apiserver: static-pod
+kube-scheduler: static-pod
+kube-controller-manager: static-pod
+etcd: static-pod
+dns: pod coredns
+
+Temporary stop the kube-scheduler
+cd /etc/kubernetes/manifests
+mv kube-scheduler.yaml /etc/kubernetes
+
+Manually placing pod when no schedule 
+spec:
+  nodeName: cluster2-master1
+
+
+DaemonSet: tolerations for control plan 
+tolerations:
+      # these tolerations are to have the daemonset runnable on control plane nodes
+      # remove them if your control plane nodes should not run pods
+spec:
+      containers:
+      - image: nginx:1.17.6-alpine
+        name: container1
+        ports:
+        - containerPort: 80
+          hostPort: 8088
+You have to mention hostPort to container port. The kubernetes scheduler will be unable to schedule more than 1 pod on same host and in this way all nodes have at least one pod scheduled (60)
+----
+tail -f /log/date.log
+
+If node has taints then we cannot deploy workload unless you mentions tolerations 
+
+Volume 
+emptyDir not persistent
+volumes:
+  - name: log-volume
+    emptyDir: {}
+
+kubectl exec -it multi-container-playground -c c1 -- env
+kubectl get events -A --sort-by=.metadata.creationTimestamp
+k get events -A
+crictl ps running containers 
+crictl stop a862d5022aa1c
+kubectl api-resources --namespaced=true -o name
+kubectl -n project-tiger get roles --no-headers | wc -l
+crictl pods //get all pods in system(on each node)
+Ssh node01 // crictl ps to see pods scheduled on node01
+crictl pods --label pod=container
+crictl ps | grep 8ba440ae9b1ea
+crictl inspect 54b0995a63052 | grep -i  runtime
+crictl logs 54b0995a63052
+kubectl -n secret exec -it secret-pod -- ls /tmp/secret1
+k get ep static-pod-service
+
+------------
+Checking access from busybox1  to busy box when nework policy apply on busybox1 to access busybox
+kubectl exec busybox1  -- nslookup 10-244-1-2.default.pod.cluster.local 
+------------
+
+----
+securityContext:
+      readOnlyRootFilesystem: true
+    volumeMounts:
+    - name: my-volume
+      mountPath: /data
+      readOnly: false.   //meaning that the volume can be written write and read 
+  volumes:
+  - name: my-volume
+    emptyDir: {}
+----
+
+----
+Run the pod on specific node.
+tolerations:
+  - key: node-role.kubernetes.io/master
+    effect: NoSchedule
+  nodeSelector:
+    node-role.kubernetes.io/control-plane:
+---
+---
+kubectl get nodes -l='!node-role.kubernetes.io/master' -o=custom-columns=NAME:.metadata.name
+--
+--record flag helps to see the details of the revision history. When you don't append --record - field CHANGE-CAUSE will be just <none> in:
+
+kubectl get priorityclass 
+spec:
+  priorityClassName: level3 // we to create the PC object 
+
+kubeadm certs check-expiration
+
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+  nodeSelector:
+    kubernetes.io/hostname: k8s-node-01
+kubectl -n management logs deploy/collect-data -c nginx >> /root/logs.log >> append 
+
+Two container cannot listen on some port in pod.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-ns
+  namespace: prod
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+	  tier: frontend
+All namespace with pod with above labels 
+
+hostPath By default, path is of type Directory
+
+Till 101: 
+61,76,77,78,79,84, 88, 94,95,98,99 need to be checked 

@@ -6,7 +6,7 @@ cut/copy/paste (d (delete/cut) /y (yank) /p (paste)) u undo
 
 
 
- set number
+set number
 set tabstop=2
 set expandtab
 set shiftwidth=2

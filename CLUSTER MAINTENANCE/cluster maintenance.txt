@@ -62,7 +62,7 @@ kubeadm version // show version of kabeadm
 [upgrade/versions] Cluster version: v1.26.0
 [upgrade/versions] kubeadm version: v1.27.0
 
-
+------------------------------------
 *** Backup and Restore method 1 ***:
 ---
 1. k get pods -n kube-system
@@ -101,7 +101,7 @@ etcdctl snapshot save --endpoints=127.0.0.1:2379 --cacert=/etc/kubernetes/pki/et
 etcdctl  snapshot restore --data-dir /var/lib/etcd-from-backup /opt/snapshot-pre-boot.db
 ls /var/lib/etcd
 vi /etc/kubernetes/manifests/etcd.yaml 
-
+------------------------------------
 *** Backup and Restore method 2 ***:
 ---
 1. k config view // view all clusters 
