@@ -30,7 +30,7 @@ Two item in the list
  kubectl label namespace frontend namespace=frontend
  kubectl label namespace backend namespace=backend
 
-
+...
     - namespaceSelector:
         matchLabels:
           project: myproject
@@ -40,3 +40,68 @@ Two item in the list
         - key: namespace
           operator: In
           values: ["frontend", "backend"]
+
+...
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-to-web-test
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - ports:
+    - protocol: TCP
+      port 80
+...
+
+This policy will allow DNS requests to be made in the namespace if the default deny policy was previously applied:
+
+...
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-allow-dns
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+...
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-backend
+  namespace: project-snake
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: db1
+    ports:
+    - port: 1111
+  - to:
+    - podSelector:
+        matchLabels:
+          app: db2
+    ports:
+    - port: 2222
+...
+
+Q - 72,97,99
+

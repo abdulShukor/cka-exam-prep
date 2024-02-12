@@ -1,5 +1,10 @@
 https://www.qwerty.md/kubernetes.html
+https://github.com/ViktorUJ/cks
 -------------------------------------
+Less - head - tails - more 
+man less // to details about less 
+
+
 Note:
 kubectl run admin-pod --image=busybox --command sleep 3200 --dry-run=client -o yaml > admin-pod.yaml
 You can connect/attach to pod to check for token or certificates
@@ -37,7 +42,7 @@ systemctl status kubelet
 systemctl start kubelet
 systemctl status kubelet
 kubectl -n space get po --as alok
-journalctl -u kubelet // using for service like systemd 
+journalctl -u kubelet // getting logs of service like systemd 
 
 
 PV is cluster wide scoped PVC is namespaces scoped. In exam check for PVC namespace 
@@ -80,7 +85,9 @@ kubectl get po,svc
 kubectl get nodes -o json | jq ".items[]|{name:.metadata.name, taints:.spec.taints}"
 
 
-NetworkPolicy: check labels if not working 
+NetworkPolicy: check labels of netpol and pods for toruble shooting purpose 
+
+CSR: we should first deny this certificate and delete this CSR:
 
 wget to download 
 Curl to https requests 
@@ -111,7 +118,7 @@ spec:
 kubectl create secret generic sec1 --from-literal=password=CKA123
 Verify if Secret is mounted as volumes:
 kubectl exec -it pod-sec-file -- ls /secrets
-kubectl exec -it pod-sec-file -- cat /secrets/password
+kubectl exec -it pod-sec-file -- cat /secrets/password  // print the actual secret 
 
 
 kubectl exec -it pod-sec-env -- env //viewing env(40)
@@ -119,12 +126,15 @@ kubectl exec -it pod-sec-env -- env //viewing env(40)
 Create config.txt:
 key1=value1
 key2=value2
-kubectl create cm newcfgmap --from-file=config.txt //encoded 64
+kubectl create cm newcfgmap --from-file=config.txt //encoded 64 (41)
 Secret will automatically be encoded 
 To decode the values use:
 $ echo -n "cHJvZA==" | base64 -d
 echo -n  "name" | base64
 
+ls -la /etc/kubernetes/manifests/
+
+DaemonSet(59)
 
 Passing	 deployment: very by Under the Condition can be seen: Progressing  Unknown  DeploymentPaused
 
@@ -206,8 +216,28 @@ spec:
           hostPort: 8088
 You have to mention hostPort to container port. The kubernetes scheduler will be unable to schedule more than 1 pod on same host and in this way all nodes have at least one pod scheduled
 
-(**************60***************)
-----
+
+command: ["/bin/sh", "-c", "while true; do date >> /log/date.log; sleep 1; done"]
+
+
+The readOnly field is set to false, indicating that the container has read-write access to the mounted volume.
+
+
+***
+Read Only access on container’s filesystem - 73
+securityContext:
+      readOnlyRootFilesystem: true
+kubectl exec -it readonly-pod -- touch /tmp/test.txt
+kubectl exec -it readonly-pod -- touch /data/test.txt
+***
+
+envFrom:
+    - secretRef:
+        name: my-secret
+kubectl exec -it secure-pod -- env|grep -i "username\|password"
+
+(**************60***************)-------------------------------------------------------------
+
 tail -f /log/date.log
 
 If node has taints then we cannot deploy workload unless you mentions tolerations 
@@ -218,10 +248,13 @@ volumes:
   - name: log-volume
     emptyDir: {}
 
+Hostpath is persistence 
+
 kubectl exec -it multi-container-playground -c c1 -- env
 kubectl get events -A --sort-by=.metadata.creationTimestamp
 k get events -A
-crictl ps running containers 
+crictl ps  //running containers 
+crictl ps  //running containers + exited 
 crictl stop a862d5022aa1c
 kubectl api-resources --namespaced=true -o name
 kubectl -n project-tiger get roles --no-headers | wc -l
@@ -232,14 +265,14 @@ crictl ps | grep 8ba440ae9b1ea
 crictl inspect 54b0995a63052 | grep -i  runtime
 crictl logs 54b0995a63052
 kubectl -n secret exec -it secret-pod -- ls /tmp/secret1
-k get ep static-pod-service
 
-------------
+
+k get ep(endpoint) static-pod-service
+
 Checking access from busybox1  to busy box when nework policy apply on busybox1 to access busybox
 kubectl exec busybox1  -- nslookup 10-244-1-2.default.pod.cluster.local 
-------------
 
-----
+
 securityContext:
       readOnlyRootFilesystem: true
     volumeMounts:
@@ -249,9 +282,7 @@ securityContext:
   volumes:
   - name: my-volume
     emptyDir: {}
-----
 
-----
 Run the pod on specific node.
 tolerations:
   - key: node-role.kubernetes.io/master
@@ -259,14 +290,13 @@ tolerations:
   nodeSelector:
     node-role.kubernetes.io/control-plane:
 ---
----
 kubectl get nodes -l='!node-role.kubernetes.io/master' -o=custom-columns=NAME:.metadata.name
---
+---
 --record flag helps to see the details of the revision history. When you don't append --record - field CHANGE-CAUSE will be just <none> in:
 
 kubectl get priorityclass 
 spec:
-  priorityClassName: level3 // we to create the PC object 
+  priorityClassName: level3 // we need to create the PC object beforehand  
 
 kubeadm certs check-expiration
 
@@ -339,9 +369,10 @@ iptables-save
 
 securityContext:
           allowPrivilegeEscalation: false
+
 kubectl -n secure exec -it secure-app-747c8567ff-k58k7 -- whoami
 
-k set resources deployment.apps/test --limits=cpu=200m,memory=512Mi --requests cpu=100m,memory=250Mi
+k set resources deployment.apps/test --limits=cpu=200m,memory=512Mi --requests cpu=100m,memory=250Mi // k get spa
 Limit should be higher then request always or equal 
 
 affinity on pod and label the node 
@@ -350,7 +381,7 @@ kubectl describe svc kube-dns -n kube-system | grep -i  IP. You find this on all
 k exec  test-5f748bf7f4-4x8cf -- cat /etc/resolv.conf
 
 spec:
-  podSelector: {}
+  podSelector: {} 
   policyTypes:
   - Ingress
   ingress:
@@ -368,6 +399,7 @@ kubectl get po nginx -o jsonpath='{.spec.containers[].image}{"\n"}'
 Verify if ServiceAccount has rights to list pods. You should get yes:
 kubectl auth can-i list pods --as system:serviceaccount:default:backend-sa
 
+***
 Privileged containers in Kubernetes:
 kubectl run non-priv --image=busybox --command -- sh -c "sleep 1d"
 kubectl exec -it non-priv -- sh
@@ -377,6 +409,7 @@ Add this to pod securityContext:
 kubectl exec -it priv -- sh
 sysctl kernel.hostname="test"
 kernel.hostname = test
+***
 
 Create dotfiles in Secret volumes in Kubernetes:
 ls -la
@@ -400,6 +433,8 @@ kind: ServiceAccount
 metadata:
   name: bot
 automountServiceAccountToken: false
+
+...
 apiVersion: v1
 kind: Pod
 metadata:
@@ -411,4 +446,4 @@ spec:
 
 
 Till 110: 
-61,76,77,78,79,84, 88, 94,95,98,99,121,122,124,131 need to be checked 
+77,78,79,84,87, 88,89, 94,95,96, 98,99,121,122,124,131 need to be checked 

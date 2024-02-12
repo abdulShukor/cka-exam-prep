@@ -1,0 +1,141 @@
+Vim
+
+ ~/.vimrc is used for global Vim settings that apply to all sessions launched by a user, while .vimrc in a specific directory is used for project-specific settings that only apply to sessions launched from that directory. The settings in the local .vimrc file override those in the global ~/.vimrc file when conflicts arise.
+
+ClusterRole, by contrast, is a non-namespaced resource. The resources have different names (Role and ClusterRole) because a Kubernetes object always has to be either namespaced or not namespaced; it can't be both.
+
+Cluster wide resource is accessible all over the cluster no namespaces involved 
+
+Role + RoleBinding (available in single Namespace, applied in single Namespace)
+ClusterRole + ClusterRoleBinding (available cluster-wide, applied cluster-wide)
+ClusterRole + RoleBinding (available cluster-wide, applied in single Namespace)
+Role + ClusterRoleBinding (NOT POSSIBLE: available in single Namespace, applied cluster-wide)
+
+
+
+# create SAs
+k -n ns1 create sa pipeline
+k -n ns2 create sa pipeline
+
+# use ClusterRole view
+k get clusterrole view # there is default one
+k create clusterrolebinding pipeline-view --clusterrole view --serviceaccount ns1:pipeline --serviceaccount ns2:pipeline
+
+# manage Deployments in both Namespaces
+k create clusterrole -h # examples
+k create clusterrole pipeline-deployment-manager --verb create,delete --resource deployments
+# instead of one ClusterRole we could also create the same Role in both Namespaces
+
+k -n ns1 create rolebinding pipeline-deployment-manager --clusterrole pipeline-deployment-manager --serviceaccount ns1:pipeline
+k -n ns2 create rolebinding pipeline-deployment-manager --clusterrole pipeline-deployment-manager --serviceaccount ns2:pipeline
+
+Verify
+
+# namespace ns1 deployment manager
+k auth can-i delete deployments --as system:serviceaccount:ns1:pipeline -n ns1 # YES
+k auth can-i create deployments --as system:serviceaccount:ns1:pipeline -n ns1 # YES
+k auth can-i update deployments --as system:serviceaccount:ns1:pipeline -n ns1 # NO
+k auth can-i update deployments --as system:serviceaccount:ns1:pipeline -n default # NO
+
+The idea here is to misconfigure the Apiserver in different ways, then check possible log locations for errors.
+You should be very comfortable with situations where the Apiserver is not coming back up.
+Configure the Apiserver manifest with a new argument --this-is-very-wrong .
+Check if the Pod comes back up and what logs this causes.
+Fix the Apiserver again.
+
+Log locations to check:
+/var/log/pods
+/var/log/containers
+crictl ps + crictl logs
+docker ps + docker logs (in case when Docker is used)
+kubelet logs: /var/log/syslog or journalctl
+journalctl | grep apiserver
+
+# always make a backup !
+cp /etc/kubernetes/manifests/kube-apiserver.yaml ~/kube-apiserver.yaml.ori
+
+# make the change
+vim /etc/kubernetes/manifests/kube-apiserver.yaml
+
+# wait till container restarts
+watch crictl ps
+
+# check for apiserver pod
+k -n kube-system get pod
+
+cat /var/log/pods/kube-system_kube-apiserver-controlplane_a3a455d471f833137588e71658e739da/kube-apiserver/X.log
+> 2022-01-26T10:41:12.401641185Z stderr F Error: unknown flag: --this-is-very-wron
+
+ # smart people use a backup
+cp ~/kube-apiserver.yaml.ori /etc/kubernetes/manifests/kube-apiserver.yaml
+
+journalctl | grep apiserver | grep err
+
+cat /var/log/syslog | grep kube-apiserver 
+
+
+k logs deployments/collect-data -c nginx >> /root/logs.log 
+
+
+Fix the Deployment in Namespace management where both containers try to listen on port 80.
+Remove one container. 
+Nginx and httpd listened on same port 80
+You could also try to run nginx or httpd on a different port. But this would require Nginx or Apache (httpd) specific settings.
+
+Check the NodePort Service for the Nginx Ingress Controller to see the ports
+k -n ingress-nginx get all 
+k -n ingress-nginx get svc ingress-nginx-controller
+We can reach the NodePort Service via the K8s Node IP:
+k get nodes controlplane  -o wide  get the ip address of the control node then the ingress nodePort 
+curl http://172.30.1.2:30080 -> control plan node ip then the ingress nodeport 
+
+And because of the entry in /etc/hosts we can call
+curl http://world.universe.mine:30080
+
+Vi /etc/hosts 
+172.30.1.2 world.universe.mine
+
+k get ingressclass
+
+
+spec:
+  ingressClassName: nginx-example
+  rules:
+  - http:
+      paths:
+      - path: /testpath
+        pathType: Prefix
+        backend:
+          service:
+            name: test
+            port:
+              number: 80
+
+spec:
+  rules:
+  - host: "foo.bar.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/bar"
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+
+NOTES:
+In netpol 
+ Won't work. Need to give two space to match labels 
+- namespaceSelector:
+  matchLabels:
+    kubernetes.io/metadata.name: space2
+
+To Port: <any> (traffic allowed to all ports):
+We don't put port section in the yaml 
+Default to all ports 
+
+- ports vs port in netpol 
+
+k create clusterrolebinding pipeline-view --clusterrole=view  --serviceaccount=ns2:pipeline --serviceaccount=ns1:pipeline
+One cluster rolebinding to both accounts 
