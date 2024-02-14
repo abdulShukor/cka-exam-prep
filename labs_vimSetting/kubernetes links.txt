@@ -1,7 +1,11 @@
 https://www.qwerty.md/kubernetes.html
 https://github.com/ViktorUJ/cks
+https://github.com/pradeepatta/Kubernetes-CKA-Exam-Guide/blob/main/kubectl%20commands.txt
+https://lnkd.in/gt7E8Eyz
+https://lnkd.in/dK8Udvhy
+https://lnkd.in/d5un6ymD
 -------------------------------------
-Less - head - tails - more 
+Less - more - head - tails
 man less // to details about less 
 
 
@@ -40,12 +44,19 @@ cat /root/web-pod.pod
 
 systemctl status kubelet
 systemctl start kubelet
-systemctl status kubelet
+systemctl restatus kubelet
 kubectl -n space get po --as alok
-journalctl -u kubelet // getting logs of service like systemd 
+journalctl -u kubelet // getting logs of service/system logs, like systemd 
 
 
 PV is cluster wide scoped PVC is namespaces scoped. In exam check for PVC namespace 
+
+Clusterrole, clusterrolebinding role, rolebinnding 
+3 posible ways:
+
+1. Clusterrole + clusterrolebinding
+2. role + rolebiding 
+3. Clusterrole + rolebiding 
 
 
 kubectl describe node controlplane | grep -i taint
@@ -56,7 +67,7 @@ Add the following toleration to it:
 spec:
   tolerations:
   - key: "color"
-    operator: "Equal"
+    operator: "Equal" // operator can have values, in, not in, or Exists 
     value: "blue"
     effect: "NoSchedule"
 ..
@@ -85,7 +96,7 @@ kubectl get po,svc
 kubectl get nodes -o json | jq ".items[]|{name:.metadata.name, taints:.spec.taints}"
 
 
-NetworkPolicy: check labels of netpol and pods for toruble shooting purpose 
+NetworkPolicy: check labels of netpol and pods for trouble shooting purpose 
 
 CSR: we should first deny this certificate and delete this CSR:
 
@@ -115,7 +126,7 @@ spec:
       port 80
 
 
-kubectl create secret generic sec1 --from-literal=password=CKA123
+kubectl create secret generic sec1 --from-literal=password=CKA123. //automatically encoded 
 Verify if Secret is mounted as volumes:
 kubectl exec -it pod-sec-file -- ls /secrets
 kubectl exec -it pod-sec-file -- cat /secrets/password  // print the actual secret 
@@ -132,7 +143,7 @@ To decode the values use:
 $ echo -n "cHJvZA==" | base64 -d
 echo -n  "name" | base64
 
-ls -la /etc/kubernetes/manifests/
+ls -la /etc/kubernetes/manifests/ 
 
 DaemonSet(59)
 
@@ -149,7 +160,7 @@ To get the current context without using kubectl:
 cat ~/.kube/config |grep current-context
 cat ~/.kube/config |grep current-context | awk '{print $2}'
 echo "cat ~/.kube/config |grep current-context | awk '{print $2}'" > /opt/context_default_no_kubectl.sh
-bash /opt/context_default_no_kubectl.sh
+bash /opt/context_default_no_kubectl.sh // execute the script 
 
 nodeName: cluster1-master1
 
