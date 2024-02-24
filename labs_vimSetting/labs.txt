@@ -54,6 +54,9 @@ Creating pod imperative way the name of container will same as the pod name but 
 
 LAB1.1:
 ---
+kubectl get pod test -o yaml | yq  .metadata.name // yq yaml reader 
+kubectl get pod test -o yaml | yq  .metadata.name | base64
+
 kubectl expose deployment hr-web-app --type=NodePort --port=8080 --name=hr-web-app-service --dry-run=client -o yaml > hr-web-app-service.yaml
 kubectl get nodes -o jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/nodes_os_x43kj56.txt
 kubectl run messaging --image=redis:alpine -l tier=msg

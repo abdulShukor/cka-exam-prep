@@ -1,0 +1,7 @@
+https://www.qwerty.md/kubernetes.html
+https://github.com/ViktorUJ/cks
+https://github.com/pradeepatta/Kubernetes-CKA-Exam-Guide/blob/main/kubectl%20commands.txt
+https://www.freecodecamp.org/news/certified-kubernetes-administrator-study-guide-cka/
+https://github.com/StenlyTU/K8s-training-official
+https://lnkd.in/gt7E8Eyz
+https://lnkd.in/d5un6ymD

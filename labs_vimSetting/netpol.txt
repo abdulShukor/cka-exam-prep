@@ -10,7 +10,7 @@
           role: client
   ...
 
-Allowed ingress from pod that has labels role: client and that exit in namespace with label user: alice. All one item in the list. Pod from namespace 
+Allowed ingress from pod that has labels role: client and that exists in namespace with label user: alice. All one item in the list. Pod from thennamespace 
 
  ...
   ingress:
@@ -38,7 +38,7 @@ Two item in the list
  - namespaceSelector:
         matchExpressions:
         - key: namespace
-          operator: In
+          operator: In.  // equal, exists,
           values: ["frontend", "backend"]
 
 ...

@@ -1,0 +1,84 @@
+
+Notes:
+PVC and pod should be in same namespace. PV is cluster based 
+Create ns if not created 
+Try avoid placing pod on control plane 
+Imperative in exam. Declarative way in organizational 
+Config issue mostly the server url or the control plan port
+Compare the default config with given that have problem or error 
+ReplicaSet acquire the existing pod running in cluster with same labels, stand alone pods become part of rs, if delete the stand alone then rs will create a new
+K get pods --show-lables for creating the rs label to acquire the already one 
+
+Selector
+ Mmtchlabels 
+  Label // to register pod as property of deployment or rs 
+
+K get pods -A -o json --sort-by=.metadata.timecreated /this is descending order 
+K get pods -A -o json --sort-by=.metadata.timecreated | tac // this is ascending order
+
+Echo "K get pods -A -o json --sort-by=.metadata.timecreated | tac "  > /opt/pods.asc.sh
+Chmod +x /opt/pods.asc.sh //permission to execute 
+
+To execute:
+/opt/pods.asc.sh
+bash /opt/pods.asc.sh 
+
+Not need .item for custom command 
+Args when want to run only commands Question-37
+Args
+ - 
+ - -- 
+Check the typo of deployment by comparing with imperative command to generate deployment 
+
+
+Exec -it bash or sh (inside pod]
+exec -- curl (connect/attach to pod)/
+
+Etcd -version 
+If <data-dir-location> is the same folder as before, delete it and stop etcd process before restoring the cluster. Else change etcd configuration and restart the etcd process after restoration to make it use the new data directory.
+
+Ps -aux | grep kubelet
+Cat /path | grep static pod 
+k explain pod.spec --recursive 
+k run test --image nginx --dry-run=client -o yaml -- sh -c "sleep 200"
+k -h
+Cat etcd path | grep -I -A20
+
+
+Execl Commands:
+1. Chmod rwx
+2. chown 
+3. Df disk free
+4. Disk usage
+4. Find
+5. Grep
+7. Mv /move/rename
+8. Netstat // check ports
+9. Nslookuo // look up ip or hostname
+10. Scp
+11. Ssh.  //secure shell remote login 
+12 touch 
+13. Rm 
+14. Sudo super user do(override)
+15. man manual 
+16. History 
+
+
+Vim:
+1. I
+2. A /small write 
+3. A
+4. U last change /small 
+5. U all changes 
+6. O // next line
+7. Dd 
+8.  :se nu
+9. Yy / copy 
+10. P /past
+11. P small
+12. Dd / delete and cut and p to paste 
+13. Nw mover cursor forward n number 
+14. / search n to next
+15. linux is cases sensitive 
+
+

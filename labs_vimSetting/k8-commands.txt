@@ -1,0 +1,80 @@
+Notes:
+
+
+kubectl create deployment my-dep --image=busybox --port=5701
+
+kubectl create ingress multipath --class=default \
+--rule="foo.com/=svc:port" \
+--rule="foo.com/admin/=svcadmin:portadmin"
+
+
+kubectl create ingress ingress1 --class=default \   should be same namespace where the application exists. 
+--rule="foo.com/path*=svc:8080" \
+--rule="bar.com/admin*=svc2:http"
+
+
+kubectl create priorityclass high-priority --value=1000 --description="high priority"
+
+
+kubectl create secret docker-registry my-secret --from-file
+kubectl create secret generic my-secret --from-file=
+
+
+kubectl run hazelcast --image=hazelcast/hazelcast --env="DNS_DOMAIN=cluster" --env="POD_NAMESPACE=default"
+
+
+Start a busybox pod and keep it in the foreground, don't restart it if it exits
+kubectl run -i -t busybox --image=busybox --restart=Never
+kubectl run nginx --image=nginx -- <arg1> <arg2> ... <argN>
+kubectl run nginx --image=nginx --command -- <cmd> <arg1> ... <argN>
+
+
+Create a service for an nginx deployment, which serves on port 80 and connects to the containers on port 8000
+kubectl expose deployment nginx --port=80 --target-port=8000
+
+kubectl autoscale deployment foo --min=2 --max=10
+kubectl autoscale rc foo --max=5 --cpu-percent=80
+
+
+kubectl certificate approve csr-sqgzp
+
+
+kubectl api-versions
+Print the address of the control plane and cluster services
+kubectl cluster-info
+
+
+Mark node "foo" as unschedulable
+kubectl cordon foo
+Drain node "foo", even if there are pods not managed by a replication controller, replica set, job, daemon set or stateful set on it
+kubectl drain foo --force
+kubectl drain foo --grace-period=900
+
+
+K config set-context --current --namespace alpha 
+kubectl config use-context minikube
+kubectl config view
+
+kubectl version
+
+
+kubectl exec mypod -it -- ls -t /usr     /timestamp 
+kubectl attach mypod -c ruby-container -i -t
+
+Listen on port 8888 locally, forwarding to 5000 in the pod
+kubectl port-forward pod/mypod 8888:5000
+
+Deployment - rollout:
+history
+pause
+restart
+resume
+status
+undo
+Revision 
+To-revision 
+--record 
+
+
+
+
