@@ -1,23 +1,15 @@
 
-
--------------------
-
+******
 Scheduling:
----
-
-Manual pod Scheduling - Optional
-
-
+Manual pod Scheduling
 1. Assigning nodename on pod 
 2. K replace --force -f nginx.yaml delete and create pod 
 3. k replace --force -f nginx.yaml 
 
 Note:
-
 We cannot remove running pod from one node to another only you can delete pod from one node and recreate on anther. 
 
 Node: <none> // means pod not placed 
-
 spec:
   nodeName: node01 // pod we get placed on node01
   containers:
@@ -127,7 +119,11 @@ Note: affinity come after spec before container and its pod level scoped field.
         imagePullPolicy: Always
         name: nginx
 
+Affinity works with labels select on nodes 
+Operator works with affinity with labels exists and In
 
+Toleration works with Taints set on nodes
+Works with all operators
 
 Resource Limits - Optional:
 ---
@@ -158,6 +154,7 @@ DaemonSets  - Optional:
 
 Note: there is not create DaemonSet command. We create deployment then change the name to DaemonSet
 Remove replicas. Strategy and status. DaemonSet does not have replica 
+Leave match labels 
 
 ---
 apiVersion: apps/v1

@@ -18,6 +18,8 @@
 16. vi /etc/kubernetes/manifests/kube-apiserver.yaml // etcd and api server has its own ca certificate
 17. crictl logs f940342fedcb8
 
+ls -l /etc/kubernetes/pki/etcd/server* 
+
 Note:
 /PKI dir // kubernetes  API sever 
 /PKI/etcd.  For etcd
@@ -112,6 +114,9 @@ NOTE:
   - delete
 
 For everything '*'
+
+Care groups are the only V1
+Apps/v1 are not core groups 
 
 CLUSTER:
 ---

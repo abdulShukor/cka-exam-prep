@@ -1,0 +1,525 @@
+#kube-apiserver --enable-admission-plugins=NamespaceLifecycle,LimitRanger ...
+kube-apiserver --disable-admission-plugins=PodNodeSelector,AlwaysDeny ...
+
+# For kubeadm deployed cluster:
+kubectl -n kube-system exec -it kube-apiserver-controlplane -- kube-apiserver -h | grep enable-admission-plugins
+
+#
+131
+Create a pod nginx using image nginx and init container git with image alpine/git with volume mount path of the main container's /usr/share/nginx/html.
+nginx index.html needs to be overwritten in shared volume by index.html cloned from path https://github.com/dmitritelinov/dmitritelinov.github.io.git
+
+Answer
+Create pod manifest:
+
+kubectl run nginx --image nginx --dry-run=client -o yaml
+And modify it in the following way:
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  initContainers:
+  - image: alpine/git
+    name: git
+    args:
+    - clone
+    - --
+    - https://github.com/dmitritelinov/dmitritelinov.github.io.git
+    - /data
+    volumeMounts:
+    - mountPath: "/data"
+      name: data
+  containers:
+  - image: nginx
+    name: nginx
+    volumeMounts:
+    - mountPath: "/usr/share/nginx/html"
+      name: data
+  volumes:
+  - name: data
+    emptyDir: {}
+Apply:
+kubectl apply -f pod.yaml
+And verify:
+kubectl exec -it nginx -- cat /usr/share/nginx/html/index.html
+
+#
+kubectl label pod/nginx-dev3 env=uat --overwrite
+
+#
+kubectl get no --selector='!node-role.kubernetes.io/master' --no-headers | wc -l > /tmp/node-count.txt
+
+#121
+
+Create a NetworkPolicy called allow-port which allows access ONLY to port 8080.
+Note:
+
+Pods CANNOT communicate on any port other than 8080
+Pods running in ALL other namespaces can also access port 8080
+Answer
+The task is to allow traffic from all pods running in ALL namespaces on port 8080.
+Other pods running in default namespace can only access port 8080.
+The trick here is that you should NOT allow access from ALL resources.
+Remember, access can be allowed using Pod Selector, Namespace Selector and IP CIDR blocks:
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-port
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - ports:
+    - port: 8080
+      protocol: TCP
+    from:
+    - podSelector: {}
+    - namespaceSelector: {}
+
+#
+31
+Create a pod front-end-helper that write binaries downloaded successfully into a file front-end-helper.log.txt and then exits.
+Check pod front-end-helper should be deleted automatically when the task is completed.
+
+Answer
+THe imperative command will be used:
+
+kubectl run front-end-helper --image=busybox -it --rm --restart=Never -- /bin/sh -c 'echo binaries downloaded successfully' > front-end-helper-log.txt
+Check the file:
+cat front-end-helper-log.txt
+kubectl get po
+the pod is getting deleted after execution
+
+#
+35
+Create a Network Policy to allow traffic from internal application only to payroll-service and db-service.
+Use the spec given below:
+Policy name: internal-policy
+Policy typeL Egress
+Egress allow: payroll
+Payroll port: 8080
+Egress allow: mysql
+MySQL port: 3306
+Allow DNS resolution possible
+
+Answer
+Get labels for all pods and check the services:
+
+kubectl get po --show-labels
+kubectl get svc
+The pods have the following labels:
+internal - name: internal
+mysql - db: mysql
+payroll -  app: payroll
+Construct the netpol:
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: internal-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      name: internal
+  policyTypes:s
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          db: mysql
+    ports:
+    - protocol: TCP
+      port 3306
+  - to:
+    - podSelector:
+        matchLabels:
+          app: payroll
+    ports:
+    - protocol: TCP
+      port 8080
+  - ports:
+    - protocol: UDP
+      port 53
+    - protocol: TCP
+      port 53
+Apply and check:
+kubectl apply -f np.yaml
+kubectl describe netpol internal-policy
+
+#
+48
+A pod named example-pod is running on the cluster. Insert a sidecar container in it with following information:
+image: busybox
+name: sidec-container
+command inside sidec-container would be:
+/bin/sh -c while true; do echo $(date -u) 'Hi I am from sidec-container' >> /var/log/index.log; sleep 5; done
+Also, mounts below volume as well:
+name: var-log
+mountPath: /var/log
+
+Answer
+Add the following to the pod manifest:
+
+- image: busybox
+  command: ["/bin/sh"]
+  args: ["-c", "while true; do echo $(date -u) 'Hi I am from sidec-container' >> /var/log/index.log; sleep 5; done"]
+  name: sidec-container
+  volumeMounts:
+  - name: var-log
+    mountPath: /var/log
+You can do this by editing the pod:
+kubectl edit po example-pod
+And replace the configuration when it is done:
+kubectl replace --force -f /tmp/kubectl-edit-123456789.yaml
+
+# 60
+
+Question
+Use Namespace project-tiger for the following.
+Create a Deployment named deploy-important with label id=very-important (the pods should also have this label) and 3 replicas.
+It should contain two containers, the first named container1 with image nginx:1.17.6-alpine and the second named container2 with image kubernetes/pause.
+There should be only ever one Pod of that Deployment running on one worker node. We have two worker nodes: cluster1-worker1 and cluster1-worker2.
+Because the Deployment has three replicas the result should be that on both nodes one Pod is running. THe third Pod won't be scheduled unless a new worker node will be added.
+In a way we kind of simulate the behaviour of a DaemonSet here, but using a Deployment and a fixed number of replicas.
+
+Answer
+Generate manifest:
+
+kubectl create deploy deploy-important --image=nginx:1.17.6-alpine --dry-run=client -o yaml
+And adjust it:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    id: very-important
+  name: deploy-important
+  namespace: project-tiger
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      id: very-important
+  template:
+    metadata:
+      labels:
+        id: very-important
+    spec:
+      containers:
+      - image: nginx:1.17.6-alpine
+        name: container1
+        ports:
+        - containerPort: 80
+          hostPort: 8088
+      - image: kubernetes/pause
+        name: container2
+You have to mention hostPort to container port. The kubernetes scheduler will be unable to schedule more than 1 pod on same host and in this way all nodes have at least one pod scheduled.
+Apply and check:
+kubectl apply -f dep.yaml
+kubectl -n project-tiger get deploy
+kubectl -n project-tiger get po
+
+#61
+
+Create a Pod named multi-container-playground in Namespace default with three containers named c1, c2 and c3. There should be a volume attached to that Pod and mounted into every container, but the volume shoudn't be persisted or shared with other Pods.
+Container c1 should be of image nginx:1.17.6-alpine and have the name where its Pod is running available as environment variable MY_NODE_NAME.
+Container c2 should be of image busybox:1.31.1 and write the output of the date command every second on the shared volume into the file date.log. You can use:
+
+while true; do date >> /log/date.log; sleep 1; done
+for this.
+Container c3 should be of image busybox:1.31.1 and constantly send the content of the file date.log from the shared volume to stdout. You can use:
+tail -f /log/date.log
+for this.
+Check the logs of the container c3 to confirm correct setup.
+
+Answer
+Generate initial manifest:
+kubectl run multi-container-playground --image=nginx:1.17.6-alpine --dry-run=client -o yaml
+Adjust the manufest:
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: multi-container-playground
+  name: multi-container-playground
+spec:
+  containers:
+  - image: nginx:1.17.6-alpine
+    name: c1
+    env:
+    - name: MY_NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    volumeMounts:
+    - mountPath: /log
+      name: log-volume
+  - image: busybox:1.31.1
+    name: c2
+    command: ["/bin/sh", "-c", "while true; do date >> /log/date.log; sleep 1; done"]
+    volumeMounts:
+    - mountPath: /log
+      name: log-volume
+  - image: busybox:1.31.1
+    name: c3
+    command: ["/bin/sh", "-c", "tail -f /log/date.log"]
+    volumeMounts:
+    - mountPath: /log
+      name: log-volume
+  volumes:
+  - name: log-volume
+    emptyDir: {}
+Apply:
+kubectl apply -f pod.yaml
+Verify:
+kubectl exec -it multi-container-playground -c c1 -- env
+kubectl logs -f multi-container-playground -c c3
+
+#71
+There was a security incident where an intruder were able to access the whole cluster from a single hacked backend Pod.
+To prevent this create a NetworkPolicy called np-backend in Namespace project-snake. It should allow the backend-* Pods only to:
+
+connect to db1-* Pods on port 1111
+connect to db2-* Pods on port 2222
+Use the app label of Pods in your policy.
+
+Answer
+Get the pods in namespace project-snake with labels:
+kubectl -n project-snake get po --show-labels
+they will be needed at the next step.
+Contsruct netpol object:
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-backend
+  namespace: project-snake
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: db1
+    ports:
+    - port: 1111
+  - to:
+    - podSelector:
+        matchLabels:
+          app: db2
+    ports:
+    - port: 2222
+Apply netpol and verify:
+kubectl apply -f netpol.yaml
+kubectl -n project-snake describe netpol np-backend
+#72
+Create three pods, pod name and their image name is given below:
+
+nginx - nginx
+busybox1 - busybox, sleep 3600
+busybox2 - busybox, sleep 1800
+Make sure only busybox1 pod should be able to communicate with nginx pod on port 80. Pod busybox2 should not be able to connect to pod nginx.
+
+Answer
+Create the pods:
+kubectl run nginx --image=nginx
+kubectl run busybox1 --image=busybox -- sleep 3600
+kubectl run busybox1 --image=busybox -- sleep 3600
+Get pod labels, these will be needed at next step:
+kubectl get po --show-labels
+Create NetworkPolicy object:
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      run: nginx
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          run: busybox1
+    ports:
+    - protocol: TCP
+      port: 80
+Create and check netpol object:
+kubectl apply -f np.yaml
+kubectl describe netpol np
+Test conection from busybox1:
+kubectl exec busybox1 -it -- wget $(kubectl get po nginx --template '{{.status.podIP}}')
+Test conection from busybox2:
+kubectl exec busybox2 -it -- wget $(kubectl get po nginx --template '{{.status.podIP}}')
+
+#75
+
+Generate po manifest:
+kubectl run cka-pod --image=nginx --dry-run=client -o yaml
+Adjust the manifest:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cka-pod
+spec:
+  containers:
+  - name: cka-pod
+    image: nginx
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    effect: NoSchedule
+  nodeSelector:
+    node-role.kubernetes.io/control-plane:
+Apply and check:
+kubectl apply -f po.yaml
+kubectl get po -o wide
+the pod should be scheduled on controlplane node
+# 76
+
+
+['sh', '-c', 'echo "Hello World" > /data/index.html'] vs [sh -c echo "Hello World" > /data/index.html
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: cka-pod
+  name: cka-pod
+spec:
+  initContainers:
+  - image: busybox
+    name: init
+    command: ['sh', '-c', 'echo "Hello World" > /data/index.html']
+    volumeMounts:
+    - name: vol
+      mountPath: /data
+  containers:
+  - image: nginx
+    name: cka-pod
+    volumeMounts:
+    - name: vol
+      mountPath: /usr/share/nginx/html
+  volumes:
+   - name: vol
+     emptyDir: {}
+
+#84
+Deploy a network policy called allow-only-namespace in webapp namespace. Make sure it allows ALL traffic ONLY from dev namespace.
+Policy should NOT allow communication between pods in same namespace.
+Traffic ONLY from dev namespace is allowed on ALL ports
+Edit necessary dependent resources.
+
+Answer
+You need to label the namespace with name=dev.
+
+kubectl edit ns dev
+Add to metadata.labels:
+name: dev
+By default, namespaces are not labelled with their names.
+Task is to allow traffic only from dev namespace, so we have to use namespaceSelector block.
+Since traffic is allowed on ALL ports, we don’t need to specify port block.
+An empty podSelector selects all pods in the namespace:
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-only-namespace
+  namespace: webapp
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: dev
+Apply and verify:
+kubectl apply -f  np.yaml
+kubectl -n webapp describe netpol allow-only-namespace
+
+#94
+
+#97
+
+Create a NetworkPolicy in the prod namespace which will allow traffic from ALL pods labelled as tier=frontend running in ALL namespaces.
+
+Answer
+This is a tricky question- to select pods with label tier=frontend from ALL namespaces.
+So, you have to add podSelector configuration along with namespaceSelector block.
+If you specify podSelector as a separate block then all pods will be selected only from default namespace with specific label.
+Generate netpol:
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-ns
+  namespace: prod
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+	  tier: frontend
+Apply and test:
+kubectl apply -f np.yaml
+kubectl -n prod describe netpol allow-all-ns
+
+#98
+
+Deploy an Ingress resource called multi-host-ingress with following configuration:
+
+backend path: /video
+backend service: web-service
+backend port: 8080
+hostname: web.example.com
+backend path: /
+backend service: search-service
+backend port: 9000
+hostname: search.example.com
+Answer
+This is an example of multi hosts support with Ingress resource. You can specify different hostname and map them with specific backend services. This is what you definitely work on in real world scenarios:
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multi-host-ingress
+spec:
+  rules:
+  - host: "web.example.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/video"
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 8080
+  - host: "search.example.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: search-service
+            port:
+              number: 9000
+Apply and verify:
+kubectl apply -f i.yaml
+kubectl describe ingress multi-host-ingress

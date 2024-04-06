@@ -1,0 +1,156 @@
+######
+https://www.pluralsight.com/courses/maintaining-monitoring-troubleshooting-kubernetes?exp=3
+----
+pluralsight
+----
+
+Api-server is stateless application server. Etcd is stateful. Etcdctl is command line client 
+HA of etcd 
+
+Secrets are hashed but not encrypted 
+
+Environmental variable:
+
+Restoring to a different path if running single etcd server 
+
+Restoring to the same location as current if running single etcd server
+ETCDCTL_API=3 etcdctl --data-dir  snapshot restore snapshot.db
+ls -l --> default.etcd
+sudo mv  /var/lib/etcd  /var/lib/etcd.OLD
+crictl ps 
+crictl stop bbfdf1f33ff7e
+mv ./default.etcd /var/lib/etcd
+Will automatic restate kube control manager and scheduler 
+
+Ps -aux | grep etcd is run time process 
+crictl ps | grep -i etcd
+crictl stop d02e7a6d46941 -> will restart container by kubelet 
+
+Puase containers: 
+crictl ps -a
+
+Cluster update:
+Only can upgrade minor versions
+1.17 -> 1.18
+Can't do 
+1.16 X 1.18
+Make sure read Release notes before cluster updates always: https://kubernetes.io/releases/
+
+Worker node maintenance:
+OS and hardware upgrades
+Drain nodes while maintaining always  
+If restart nodes the same pods will schedule on same node if comes back whiten 5 minutes os its better to drain node always for maintenance 
+
+HA - Cluster etcd nodes together:
+At least one scheduler and control manager running at same time in multi control and etcd cluster(HA). These will be in stand by mode and will be online if service become unavailable in cluster in anywhere else 
+HA cluster: 3 , 5 , 7. 3 minimum. always odd number of etcd for HA   
+
+External etcd cluster HA. Decoupled, add complexity 
+External etcd cluster in HA is at least 3. 3 control planes as well 
+
+
+######
+Logging and monitoring 
+Logging and performance data 
+User pods and system pods 
+Stdout
+Stderr
+ContainerD sent logs to /var/logs/containers 
+Two logs(files) are stored on node. The current and previous logs if container restarted. if pod removed from node then logs too
+
+Log data 
+K logs pods 
+If api server is down then logging to the node pod is running on then crictl ps containerID or journal 
+If container is to available the use command line txt utilities cat /var/log/containers/contaireID or tail /var/log/containers/contaireID or more /var/log/containers/contaireID 
+
+Node Logging
+Server online --> network reachable --> systemd --> container runtime --> kubelet
+Kebelet
+System D running  	            
+Journal kubelet.servvice 
+Other systems then systemd 
+/Var/log/kubelet.log 
+
+kubeproxy
+K logs pod
+/var/log/containers/contaireID 
+/Var/log/kube-proxy
+
+
+Control plane Logging 
+crictl ps containerID
+cat /var/log/containers/contaireID or tail /var/log/containers/contaireID
+/Var/log/containers 
+It running as systemd then journal 
+
+systemD: managing system services and resources on Linux systems. 
+
+Events:
+Cluster operation on resources define n cluster 
+Only retain for 1 hour 
+
+Env variable: 
+POD=$(k get pods)
+$POD
+
+K logs pod --all-containers --tail 5
+
+Journactl -u kubelet.service or Journactl -u kubelet
+
+Journactl -u kubelet.service | grep -i ERROR
+
+On logs use f to go forward and d backward 
+
+Journactl -u kubelet.service  --since today --no-pager 
+
+Crictl ps | grep apiserver 
+
+K get events --field-slector --type = warning,reason=field 
+
+Combining two kubectl  quarry with --> K get pods & k get svc 
+ 
+K get events  --namespace=kube-system 
+
+Can combine jsonpath with --sort, custom-columns(working already retrieve data from the first two commands 
+
+K top pod -> is namespaces 
+
+Trouble shoot Kubernetes cluster:
+/etc/systemd/system
+Sudo systemctl status kubelet.service --no-pager
+Sudo systemctl enable kubelet.service //enable at boot time 
+Sudo journalctl -u kublete.service --no-pager 
+/var/lib/kubelet/config.yaml
+Sudo ls -la /var/lib/kubelet
+
+Server online --> network reachable --> systemd --> container runtime --> kubelet --> static pod manifest 
+
+
+Kubelet
+Loaded: loaded (/lib/systemd/system/kubelet.service; enabled; vendor preset: enabled)
+Drop-In: /usr/lib/systemd/system/kubelet.service.d
+             └─10-kubeadm.conf
+1. kubelet is enabled --> restart 
+2. kubelet misconfigeration
+3. kubelet misconfigeration
+
+ls -la
+
+vi /etc/kubernetes/kubelet.conf 
+vi /var/lib/kubelet/config.yaml 
+ls -la /var/lib/kubelet
+Mv /var/lib/kubelet/config.yml /var/lib/kubelet/config.yaml --> rename from config.yml  to config.yaml
+vi /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+
+Jsonpath:
+- accessing 
+- filtering 
+- sorting 
+
+K get pods -o json | more
+
+
+
+
+

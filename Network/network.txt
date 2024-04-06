@@ -15,6 +15,8 @@ Explore environment:
 10. netstat -npa | grep -i etcd | grep -i 2379 | wc -l
 11. netstat -npa | grep -i etcd | grep -i 2380 | wc -l
 
+Ip link show only the interfaces. Ip a show interface with additional details 
+
 Notes:
 A network interface/ is the point of interconnection between a computer and a private or public network. A network interface is a critical component that allows devices to connect to and communicate over computer networks. It can be physical, such as an Ethernet adapter, or virtual, as seen in virtualized environments with virtual NICs.
 ---
@@ -29,14 +31,15 @@ route=default gateway
 
 CNI:
 1. ps -aux | grep -i kubelet | grep container-runtime
-2. ls /opt/cni/bin/
-3.ls /etc/cni/net.d/
-4. cat 10-flannel.conflist 
+2. ls /opt/cni/bin/. Binarires located here 
+3.ls /etc/cni/net.d/. To which cni used for our cluster 
+4. cat ls /etc/cni/net.d/10-flannel.conflist
 
 Note:
 All plug in /opt/cni/bin/
 
 Deploy CNI:
+Installing Addons
 1. wget https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 2. k describe pod kube-proxy-c429c  -n kube-system 
 3. k describe pod kube-proxy-c429c  -n kube-system 
@@ -67,6 +70,8 @@ Networking weave:
 7. k run busybox --image=busybox --dry-run=client -o yaml -- sleep 1000 > busybox.yaml
 8. k exec busybox -- ip route
 
+Use busy box instead of nginx 
+
 Notes:
 spec:
   nodeName: node01
@@ -82,11 +87,16 @@ Service networking:
 7. k logs kube-proxy-c4j8q -n kube-system 
 8.  k get all -A
 
+Pod ip range is find through network pod ip allocation 
+Service from ip server 
+Apt install ipcalc
+
 Note:
 --service-cluster-ip-range=10.96.0.0/12
 
 
 COREDNS:
+0. k -n kube-system describe  deployments.apps coredns | grep -i Corefile
 1. k get pods -n A
 2. k get pods -n kube-system
 3. k get svc -n kube-system 

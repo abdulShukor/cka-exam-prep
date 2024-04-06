@@ -3,6 +3,8 @@
 Less - more - head - tails
 man less // to details about less 
 
+Crictl: If want to check the pod/container then first find on which node the pod/containers running on then ssh to that node then crictl ps ID, crictl stop ID, crictl rm ID, crictl rm -f ID
+
 
 Note:
 kubectl run admin-pod --image=busybox --command sleep 3200 --dry-run=client -o yaml > admin-pod.yaml
@@ -29,7 +31,7 @@ Verify the output:
 cat /root/web-svc.svc
 
 scp /etc/kubernetes/manifests/static,yaml node01:/etc/kubernetes/manifests/static.yaml
-rm /etc/kubernetes/manifests/static,yaml
+rm /etc/kubernetes/manifests/static.yaml
 STATUS CrashLoopBackOff: something wrong with pod not the application running in pod 
 kubectl run nslookup --image=busybox:1.28 --command sleep 4800
 kubectl exec -it nslookup -- nslookup web-pod-svc
@@ -147,6 +149,9 @@ Passing	 deployment: very by Under the Condition can be seen: Progressing  Unkno
 command: ["/bin/sh"]
 args: ["-c", "while true; do echo $(date -u) 'Hi I am from sidec-container' >> /var/log/index.log; sleep 5; done"]
 
+Or ["/bin/sh","-c", "while true; do echo $(date -u) 'Hi I am from sidec-container' >> /var/log/index.log; sleep 5; done"]
+
+
 Construct query to get all contexts:: kubectl config get-contexts --no-headers|awk '{print $2}'
 echo "kubectl config current-context" > /opt/context_default_kubectl.sh
 bash /opt/context_default_kubectl.sh
@@ -201,7 +206,7 @@ dns: pod coredns
 
 Temporary stop the kube-scheduler
 cd /etc/kubernetes/manifests
-mv kube-scheduler.yaml /etc/kubernetes
+mv kube-scheduler.yaml /etc/kubernetes or crictl stop etcd(contianer) kuberet will restrat new container 
 Manually placing pod when no schedule 
 spec:
   nodeName: cluster2-master1
@@ -223,7 +228,7 @@ spec:
 You have to mention hostPort to container port. The kubernetes scheduler will be unable to schedule more than 1 pod on same host and in this way all nodes have at least one pod scheduled
 
 
-command: ["/bin/sh", "-c", "while true; do date >> /log/date.log; sleep 1; done"]
+*** command: ["/bin/sh", "-c", "while true; do date >> /log/date.log; sleep 1; done"]  ****
 
 
 The readOnly field is set to false, indicating that the container has read-write access to the mounted volume.
@@ -257,7 +262,7 @@ volumes:
 Hostpath is persistence 
 
 kubectl exec -it multi-container-playground -c c1 -- env
-kubectl get events -A --sort-by=.metadata.creationTimestamp
+kubectl get events -A --sort-by=.metadata.creationTimestamp. // event is namespace and will last for on hour 
 k get events -A
 crictl ps  //running containers 
 crictl ps  //running containers + exited 
@@ -278,7 +283,7 @@ k get ep(endpoint) static-pod-service
 Checking access from busybox1  to busy box when nework policy apply on busybox1 to access busybox
 kubectl exec busybox1  -- nslookup 10-244-1-2.default.pod.cluster.local 
 
-
+*******
 securityContext:
       readOnlyRootFilesystem: true
     volumeMounts:
@@ -288,6 +293,7 @@ securityContext:
   volumes:
   - name: my-volume
     emptyDir: {}
+********
 
 Run the pod on specific node.
 tolerations:
@@ -295,6 +301,7 @@ tolerations:
     effect: NoSchedule
   nodeSelector:
     node-role.kubernetes.io/control-plane:
+
 ---
 kubectl get nodes -l='!node-role.kubernetes.io/master' -o=custom-columns=NAME:.metadata.name
 ---
@@ -302,7 +309,7 @@ kubectl get nodes -l='!node-role.kubernetes.io/master' -o=custom-columns=NAME:.m
 
 kubectl get priorityclass 
 spec:
-  priorityClassName: level3 // we need to create the PC object beforehand  
+  priorityClassName: level3 // we need to create the PC object beforehand  // the highest number has high priority 
 
 kubeadm certs check-expiration
 
@@ -372,10 +379,10 @@ Two ways to create pv through storage class:
 2. We can Pass   storageClassName: to pv and create PVC with mentioning the storage class
 
 iptables-save
-
+***
 securityContext:
           allowPrivilegeEscalation: false
-
+***
 kubectl -n secure exec -it secure-app-747c8567ff-k58k7 -- whoami
 
 k set resources deployment.apps/test --limits=cpu=200m,memory=512Mi --requests cpu=100m,memory=250Mi // k get spa
@@ -416,7 +423,7 @@ kubectl exec -it priv -- sh
 sysctl kernel.hostname="test"
 kernel.hostname = test
 ***
-
+****
 Create dotfiles in Secret volumes in Kubernetes:
 ls -la
 apiVersion: v1
@@ -426,13 +433,13 @@ metadata:
 data:
   .file1: dmFsdWUtMg0KDQo=
   .file2: dmFsdWUtMQ==
-
+***
 k exec nginx -- cat  /sys/fs/cgroup/cpu/cpuacct.usage
 k exec nginx -- cat  /sys/fs/cgroup/memory/memory.usage_in_bytes
 
 You will need: ca.pem, client.pem and client.key - grab them from kubectl config file, base64 decode and put in files.
 curl --cacert ca.pem --cert client.pem --key client.key https://192.168.122.176:6443/api/v1/namespaces/default/pods
-
+***
 Opt out of automounting token for a serviceaccount in Kubernetes
 apiVersion: v1
 kind: ServiceAccount
@@ -451,7 +458,7 @@ spec:
   serviceAccountName: bot
   automountServiceAccountToken: false
 ...
-
+***
 
 Till 110: 
 77,78,79,84,87, 88,89, 94,95,96, 98,99,121,122,124,131 need to be checked 

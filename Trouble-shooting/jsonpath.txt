@@ -1,4 +1,16 @@
 ---
+
+kubectl get pods -o=custom-columns="POD_NAME:.metadata.name,POD_STATUS:.status.containerStatuses[].state"
+
+kubect1 get pods -o=jsonpath='{range.items[*]}{.metadata.name}{"\t"}{.status.podIP}{"\n"}{end}'
+
+Taint and tolerance(mostly apply tolerance to tainted control plane to schedule a pod).
+kubectl get pods -A --sort-by=.metadata.name
+
+
+Volume and volume mount to pod(emptyDir, hostPath)daemonset & statefulset
+
+
 Root elements can be in dictionary or list
 If dictionary then start with . 
 With list we put []

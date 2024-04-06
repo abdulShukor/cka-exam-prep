@@ -1,11 +1,13 @@
 
 Notes:
 PVC and pod should be in same namespace. PV is cluster based 
-Create ns if not created 
+
 Try avoid placing pod on control plane 
+
 Imperative in exam. Declarative way in organizational 
-Config issue mostly the server url or the control plan port
+Config issue mostly the server url or the control plan port with config file 
 Compare the default config with given that have problem or error 
+
 ReplicaSet acquire the existing pod running in cluster with same labels, stand alone pods become part of rs, if delete the stand alone then rs will create a new
 K get pods --show-lables for creating the rs label to acquire the already one 
 
@@ -19,15 +21,23 @@ K get pods -A -o json --sort-by=.metadata.timecreated | tac // this is ascending
 Echo "K get pods -A -o json --sort-by=.metadata.timecreated | tac "  > /opt/pods.asc.sh
 Chmod +x /opt/pods.asc.sh //permission to execute 
 
+-rwxr-xr-x means that the file owner has read, write, and execute permissions, the group has read and execute permissions, and others have read and execute permissions. 
+1. Owner of the file
+2. Group the file belong to
+3. other neither above two 
+
 To execute:
 /opt/pods.asc.sh
 bash /opt/pods.asc.sh 
 
 Not need .item for custom command 
+
+Default is descending order when retrieving k8 objects
+
 Args when want to run only commands Question-37
-Args
- - 
- - -- 
+
+command: ["git", "clone", "https://github.com/username/repository.git", "/path/to/save/repository"]
+
 Check the typo of deployment by comparing with imperative command to generate deployment 
 
 
@@ -45,18 +55,26 @@ k -h
 Cat etcd path | grep -I -A20
 
 
+# Change the owner and group recursively for directory and its contents
+chown -R user3:group3 directory
+# Change the owner of file.txt to user1
+chown user1 file.txt
+
+echo "automountServiceAccountToken: false" >> sa.yaml
+
+
 Execl Commands:
 1. Chmod rwx
 2. chown 
-3. Df disk free
-4. Disk usage
+3. Df //disk free
+4. Du /disk usage
 4. Find
 5. Grep
 7. Mv /move/rename
 8. Netstat // check ports
 9. Nslookuo // look up ip or hostname
 10. Scp
-11. Ssh.  //secure shell remote login 
+11. Ssh  //secure shell remote login 
 12 touch 
 13. Rm 
 14. Sudo super user do(override)
@@ -71,14 +89,13 @@ Vim:
 4. U last change /small 
 5. U all changes 
 6. O // next line
-7. Dd 
+7. dd 
 8.  :se nu
-9. Yy / copy 
+9. yy / copy 
 10. P /past
 11. P small
-12. Dd / delete and cut and p to paste 
-13. Nw mover cursor forward n number 
+12. dd / delete and cut and p to paste 
+13. nw mover cursor forward n number 
 14. / search n to next
 15. linux is cases sensitive 
-
 

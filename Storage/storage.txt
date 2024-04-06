@@ -143,6 +143,7 @@ volumeBindingMode: WaitForFirstConsumer
 
 
 
+
 Note:
 
 VOLUMEBINDINGMODE:
@@ -170,6 +171,8 @@ status: {}
       persistentVolumeClaim:
         claimName: local-pvc
 **NOTES**
+
+** The Storage Class called local-storage makes use of VolumeBindingMode set to WaitForFirstConsumer. This will delay the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created. **
 
 Check if pv is provision by storage class(k get pv)  or static provisioned 
 Nested scoped - Indentation 

@@ -1,22 +1,15 @@
 
+Home dir vs root dir 
+
 Crash API server take backup
 cp /etc/kubernetes/manifests/kube-apiserver.yaml ~/kube-apiserver.yaml.ori
 
-
-
-
-
-
-
-
-
-
 NOTES:
 In netpol 
- Won't work. Need to give two space to match labels 
+ Won't work. Need to give two space to match labels cause its child of matchLabels
 - namespaceSelector:
   matchLabels:
-    kubernetes.io/metadata.name: space2
+    kubernetes.io/metadata.name: space2 // its child of matchLabels
 
 To Port: <any> (traffic allowed to all ports):
 We don't put port section in the yaml 
@@ -28,6 +21,7 @@ Vim:
 
 ClusterRole, by contrast, is a non-namespaced resource. The resources have different names (Role and ClusterRole) because a Kubernetes object always has to be either namespaced or not namespaced; it can't be both.
 Cluster wide resource is accessible all over the cluster no namespaces involved 
+
 Role + RoleBinding (available in single Namespace, applied in single Namespace)
 ClusterRole + ClusterRoleBinding (available cluster-wide, applied cluster-wide)
 ClusterRole + RoleBinding (available cluster-wide, applied in single Namespace)
@@ -58,3 +52,5 @@ k get nodes controlplane  -o wide  get the ip address of the control node then t
 k -n ingress-nginx get svc ingress-nginx-controller
 curl http://172.30.1.2:30080 -> control plan node ip then the ingress node-port 
 k get ingressclass
+
+If you specify both nodeSelector and nodeAffinity, both must be satisfied for the Pod to be scheduled onto a node.

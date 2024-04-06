@@ -6,25 +6,24 @@ k get pods -n kube-system kube-apiserver-controlplane -o yaml | grep -i  service
 
 
 CNI Plugin:
-ls -la /etc/cni/net.d/ 
-cat /etc/cni/net.d/10-flannel.conflist
+ls -la /etc/cni/net.d/ configuration 
+cat /etc/cni/net.d/10-flannel.conflist.  //binaries 
 
 
 kubeadm version
 kubelet --version
 kubectl version or k get nodes, version is the kubectl 
 
-
+***
 kubeadm token create --print-join-command: Copy the output and paste it on node cluster3-worker2 to join the cluster 
-
+***
 
 cat /etc/kubernetes/manifests/kube-apiserver.yaml |grep crt
 openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text|grep -i validity -A2 // A2 means two line
 
 
-
 Kubelet:
-vi /etc/kubernetes/kubelet.conf  // kubelet api server configuration 
+vi /etc/kubernetes/kubelet.conf  // kubelet apiServer configuration 
 Ssh node01
 ps aux | grep -i kubelet
 get the configuration path from --config=/var/lib/kubelet/config.yaml in this case
@@ -34,7 +33,7 @@ grep staticPod /var/lib/kubelet/config.yaml
 staticPodPath: /etc/kubernetes/manifests
 
 
-cat /lib/systemd/system/kubelet.service
+cat /lib/systemd/system/kubelet.service  //kubelet configuration 
 Check for the path: ExecStart=/usr/bin/kubelet
 
 
@@ -49,7 +48,6 @@ ls -la /etc/kubernetes/manifests/
 
 
 k get pods -n kube-system kube-apiserver-controlplane | grep -i service
-
 
 
 vi /etc/systemd/system/etcd.service // location	 of etcd service when running as remote 
@@ -74,6 +72,116 @@ Tails -f /var/log/containers
 
 k get ns --show-labels
 k -n default run nginx --image=nginx:1.21.5-alpine --restart=Never -i --rm  -- curl -m 1 microservice1.space2.svc.cluster.local
+
+
+Notes
+Env:
+export KUBECONFIG=/root/test_k8s.conf
+kubeadm certs check-expiration 
+kubeadm certs renew apiserver
+
+
+cat /etc/kubernetes/manifests/kube-controller-manager.yaml | grep -i cluster
+cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep -i cluster
+k -n kube-system logs kube-proxy-f8kcp | grep -i proxy
+k get svc -A | grep -i dns
+
+kubectl auth can-i --list --namespace=foo -> list of actions allowed in a namespace
+
+kubectl get events -> namespaces object 
+kubectl get po -l app=nginx
+
+kubectl run pod test2 nodeName=node1 -> to run the node on specific node..you can use "kind: Binding" if you want to bind the already running pod to a node
+echo -n 'password' | base64 -> to convert the plain password into hash
+
+kubectl -n kube-system exec <etcd-pod-name> -- sh -c "ETCDCTL_API=3 etcdctl member list --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key"
+
+ETCDCTL_API=3 etcdctl snapshot status etcdsnap.db
+
+k get svc -A | grep -i dns
+
+kubcetl create secret docker-registry regcred \
+       --docker-server=privateregistry.com \
+       --docker-user=users1 \
+       --docker-password=users1passwd \
+       --docker-email=users1email
+
+curl http://webservice -> refers to "webservice" service in default name space
+curl http://webservice.apps -> refers to "webservice" service in "apps" name space
+curl http://webservice.apps.svc.cluster.local -> To access the service at cluster level
+kubectl get all -A | grep -i controller
+
+
+SSL Certs:
+========
+# kubeadm certs check-expiration | grep apiserver
+# kubeadm certs renew apiserver
+
+
+kubectl auth can-i create deployements
+
+kubeadm token list
+
+/etc/systemd/system
+
+
+
+Important Paths:
+==============
+/etc/kubernetes/
+/etc/kubernetes/pki
+/etc/kubernetes/manifests
+/etc/cni/net.d  -> CNI Config
+/opt/cni/bin -> CNI Binaries
+/var/lib/kubelet
+/var/lib/docker
+
+/etc/kubernetes/kubelet.conf
+/var/lib/kubelet/config.yaml
+
+/opt/cni/bin/calico -> For setting up network for pods
+/opt/cni/bin/calico-ipam -> For IP address mgmt on nodes
+/var/log/calico/cni/cni.log -> Log file
+
+/usr/local/bin/kube-proxy -> Binary file for Kube Proxy
+
+kubectl config view
+kubectl config view --kubeconfig=/root/test_k8s.conf
+kubectl config use-context prod-user@production-cluster
+
+export KUBECONFIG=/root/test_k8s.conf
+
+
+Etcd running as external 
+k get pods -n kube-system kube-apiserver-cluster2-controlplane -o yaml| grep -i etcd 
+    - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.pem
+    - --etcd-certfile=/etc/kubernetes/pki/etcd/etcd.pem
+    - --etcd-keyfile=/etc/kubernetes/pki/etcd/etcd-key.pem
+    - --etcd-servers=https://192.23.204.22:2379
+
+
+
+For copying be in vm that want copy to other vm 
+scp /opt/cluster2.db etcd-server:/root
+
+
+/var/lib/etcd-data points to the directory itself, while /var/lib/etcd-data/ points to the contents of the directory.
+
+
+systemctl daemon-reload 
+systemctl restart etcd
+
+
+
+Unsupported Skipping of Minor Versions:
+You cannot directly upgrade from version 1.27.x to version 1.29.x without going through the intermediate minor versions 1.28.0. In this case, you cannot skip version 1.29 and directly upgrade from 1.28.x to 1.30.x
+
+You can do: 
+1.28.0-00(any 28 minor version) to 1.29.2-1.1( to minor Latest patch version)
+
+Recommended way to update for each patch update 
+
+
 
 
 

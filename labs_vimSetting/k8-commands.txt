@@ -7,6 +7,7 @@ kubectl create ingress multipath --class=default \
 --rule="foo.com/=svc:port" \
 --rule="foo.com/admin/=svcadmin:portadmin"
 
+k get  ingress multipath -o yaml
 
 kubectl create ingress ingress1 --class=default \   should be same namespace where the application exists. 
 --rule="foo.com/path*=svc:8080" \
