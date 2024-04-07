@@ -1,6 +1,64 @@
 
+# 37 https://www.youtube.com/watch?v=mKsnBlEOFT8&list=PL6nVblW4NNAQrgSjhT8iK_v7ROIV2ikVu&index=9
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  initContainers:
+  - image: alpine/git
+    name: git8
+    args:   // don't use command use args. Image has already has command, error if use 
+    - clone
+  #  - single-brunch
+    - --
+    - https://github.com/dmitritelinov/dmitritelinov.github.io.git
+    - /data # absolute path 
+    volumeMounts:
+    - mountPath: /data
+      name: vol
+  containers:
+  - image: nginx
+    name: nginx
+    volumeMounts:
+    - mountPath: "/usr/share/nginx/html"
+      name: vol
+  volumes:
+  - name: vol
+    emptyDir: {}
+#
+---
+    args:  // command already exists in the image 
+    - clone
+    - --    # separate the command args
+    - https://github.com/dmitritelinov/dmitritelinov.github.io.git
+    - /data
+---
+initContainers:
+  - image: alpine/git
+    name: git
+    command:
+      - git   // overwrite the command in the image 
+      - clone
+      - https://github.com/dmitritelinov/dmitritelinov.github.io.git
+      - /data  # absolute path 
+---
+initContainers:
+  - image: alpine/git
+    name: git
+    command: ["git", "clone", "https://github.com/dmitritelinov/dmitritelinov.github.io.git", "/data"]
+
+Available of pv vs emptyDir in conainer 
+Pv: 
+emptyDir
+
+
+
 Notes:
-PVC and pod should be in same namespace. PV is cluster based 
+PVC and pod should be in same namespace. PV is cluster based. Restart pod if you change volume rescue that pod is using 
 
 Try avoid placing pod on control plane 
 
@@ -12,7 +70,7 @@ ReplicaSet acquire the existing pod running in cluster with same labels, stand a
 K get pods --show-lables for creating the rs label to acquire the already one 
 
 Selector
- Mmtchlabels 
+ matchlabels 
   Label // to register pod as property of deployment or rs 
 
 K get pods -A -o json --sort-by=.metadata.timecreated /this is descending order 
@@ -33,8 +91,6 @@ bash /opt/pods.asc.sh
 Not need .item for custom command 
 
 Default is descending order when retrieving k8 objects
-
-Args when want to run only commands Question-37
 
 command: ["git", "clone", "https://github.com/username/repository.git", "/path/to/save/repository"]
 
@@ -60,7 +116,8 @@ chown -R user3:group3 directory
 # Change the owner of file.txt to user1
 chown user1 file.txt
 
-echo "automountServiceAccountToken: false" >> sa.yaml
+echo "automountServiceAccountToken: false" >> sa.yaml 
+This will auto gen token 
 
 
 Execl Commands:
