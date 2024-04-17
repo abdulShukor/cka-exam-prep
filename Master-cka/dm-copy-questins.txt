@@ -745,3 +745,13 @@ cat front-end-helper-log.txt
 kubectl get po
 the pod is getting deleted after execution
 
+
+Access to all core api groups 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pink-role-cka24-arch
+rules:
+- apiGroups: [""]
+  resources: ["*"]
+  verbs: ["*"]

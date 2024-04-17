@@ -5,16 +5,13 @@ Crash API server take backup
 cp /etc/kubernetes/manifests/kube-apiserver.yaml ~/kube-apiserver.yaml.ori
 
 NOTES:
-In netpol 
- Won't work. Need to give two space to match labels cause its child of matchLabels
 - namespaceSelector:
   matchLabels:
-    kubernetes.io/metadata.name: space2 // its child of matchLabels
+    kubernetes.io/metadata.name: space2 // its child of matchLabels indentation 
 
 To Port: <any> (traffic allowed to all ports):
 We don't put port section in the yaml 
 Default to all ports 
-- ports vs ports in netpol 
 
 Vim:
  ~/.vimrc is used for global Vim settings that apply to all sessions launched by a user, while .vimrc in a specific directory is used for project-specific settings that only apply to sessions launched from that directory. The settings in the local .vimrc file override those in the global ~/.vimrc file when conflicts arise.

@@ -1,0 +1,84 @@
+
+
+Mock exam 1:
+
+CroneJob:
+ spec:
+ containers:
+  - command:
+  - /bin/sh
+  - -c
+  - curl orange-svc-cka10-trb.  // this pod svc not pod 
+schedule: '*/2 * * * *' // every two minutes 
+---
+kubectl get deploy black-cka25-trb -o yaml 
+Under status: you will see message: Deployment is paused
+kubectl rollout status deployment black-cka25-trb
+kubectl rollout resume deployment black-cka25-trb
+
+Zero rs or deployment than need to change it 
+
+kubectl rollout undo -n dev-wl07 deploy webapp-wl07
+kubectl describe deploy -n dev-wl07 webapp-wl07 | grep -i image
+
+Under resources: -> limits: change memory from 256Mi to 512Mi and save the changes.
+
+
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: orange-stc-cka07-str
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: orange-pv-cka07-str
+spec:
+  capacity:
+    storage: 150Mi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: orange-stc-cka07-str
+  local:
+    path: /opt/orange-data-cka07-str
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - cluster1-controlplane
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: orange-pvc-cka07-str
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: orange-stc-cka07-str
+  volumeName: orange-pv-cka07-str              # important 
+  resources:
+    requests:
+      storage: 128Mi
+--- 
+In exam if ask command do command not args 
+  - args:
+    - sleep
+    - "3600"
+  - command:
+    - sleep
+    - "3600"
+
+curl student-node:9999
+curl http://student-node:9999
+
+kubectl  cluster3 run --rm  -i test-curl-pod --image=curlimages/curl --restart=Never -- curl -m 2 external-webserver-cka03-svcn
+
+

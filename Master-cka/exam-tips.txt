@@ -12,6 +12,3 @@ f) Triaging and lots of triaging: Cluster is down! Triage kubelet, kube-apiserve
 
 g) Configmaps and Secrets: Setting up configmaps, secrets and mounting them to pod either as volume or exposing them through env variables
 
-If you're looking to prepare for #CKA, here's what worked for me:
-
-> Watch Saiyam Pathak 's Kubernetes 101 workshop on youtube

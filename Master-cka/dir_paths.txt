@@ -1,18 +1,12 @@
 
 Service range check the api-server: 
-
 k get pods -n kube-system kube-apiserver-controlplane -o yaml | grep -i  service
  - --service-cluster-ip-range=10.96.0.0/12
-
 
 CNI Plugin:
 ls -la /etc/cni/net.d/ configuration 
 cat /etc/cni/net.d/10-flannel.conflist.  //binaries 
 
-
-kubeadm version
-kubelet --version
-kubectl version or k get nodes, version is the kubectl 
 
 ***
 kubeadm token create --print-join-command: Copy the output and paste it on node cluster3-worker2 to join the cluster 
@@ -35,8 +29,6 @@ staticPodPath: /etc/kubernetes/manifests
 
 cat /lib/systemd/system/kubelet.service  //kubelet configuration 
 Check for the path: ExecStart=/usr/bin/kubelet
-
-
 Look for  ExecStart=/usr/bin/kubelet
 
 
@@ -47,15 +39,7 @@ grep -i staticPod /var/lib/kubelet/config.yaml
 ls -la /etc/kubernetes/manifests/
 
 
-k get pods -n kube-system kube-apiserver-controlplane | grep -i service
-
-
 vi /etc/systemd/system/etcd.service // location	 of etcd service when running as remote 
-
-
-If want to know if you api server the right port of etcd check the etcd port at first place 
-
-kubelet.service.d meaning directory just name has dots and given more specific name 
 
 /var/ meaning inside the var dirs 
 /var may have the dir or not 
@@ -70,7 +54,6 @@ docker ps + docker logs (in case when Docker is used)
 kubelet logs: /var/log/syslog or journalctl
 Tails -f /var/log/containers
 
-k get ns --show-labels
 k -n default run nginx --image=nginx:1.21.5-alpine --restart=Never -i --rm  -- curl -m 1 microservice1.space2.svc.cluster.local
 
 
@@ -119,7 +102,6 @@ SSL Certs:
 
 
 kubectl auth can-i create deployements
-
 kubeadm token list
 
 /etc/systemd/system
@@ -151,31 +133,13 @@ kubectl config use-context prod-user@production-cluster
 
 export KUBECONFIG=/root/test_k8s.conf
 
-
-Etcd running as external 
-k get pods -n kube-system kube-apiserver-cluster2-controlplane -o yaml| grep -i etcd 
-    - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.pem
-    - --etcd-certfile=/etc/kubernetes/pki/etcd/etcd.pem
-    - --etcd-keyfile=/etc/kubernetes/pki/etcd/etcd-key.pem
-    - --etcd-servers=https://192.23.204.22:2379
-
-
-
 For copying be in vm that want copy to other vm 
 scp /opt/cluster2.db etcd-server:/root
 
-
 /var/lib/etcd-data points to the directory itself, while /var/lib/etcd-data/ points to the contents of the directory.
-
-
-systemctl daemon-reload 
-systemctl restart etcd
-
-
 
 Unsupported Skipping of Minor Versions:
 You cannot directly upgrade from version 1.27.x to version 1.29.x without going through the intermediate minor versions 1.28.0. In this case, you cannot skip version 1.29 and directly upgrade from 1.28.x to 1.30.x
-
 You can do: 
 1.28.0-00(any 28 minor version) to 1.29.2-1.1( to minor Latest patch version)
 

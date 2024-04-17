@@ -1,9 +1,0 @@
-
-# What is the path configured with all binaries of CNI supported plugins?
-ls /opt/cni/bin
-
-# What is the CNI plugin configured to be used on this kubernetes cluster?
-ls /etc/cni/net.d/
-
-# Where is the configuration file located for configuring the CoreDNS service?
-/etc/coredns/Corefile

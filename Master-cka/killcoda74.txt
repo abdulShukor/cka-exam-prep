@@ -1,0 +1,473 @@
+
+* --- 74 scenarios --- **
+
+View the certificate signing request:
+openssl req  -noout -text -in ./server.csr.
+
+View the certificate:
+openssl x509  -noout -text -in ./server.crt
+
+
+
+* ---  Networking in Kubernetes --- *
+ip link // list and modify interfaces on the host system
+ip addr // see the ip addresses of the interfaces
+ip addr add 192.168.1.10/24 dev eth0 // sets the interfaces with ip addresses
+ip route add 192.168.1.0/24 via 192.168.2.1 // add routing table entries
+cat /proc/sys/net/ipv4/ip_forward // set it to 1 to forward packets
+cat /etc/hosts { add name resolution entires }
+cat /etc/resolv.conf
+nslookup 
+dig
+arp
+netstat -plnt
+route 
+ip address show type bridge (lists all bridge interfaces)
+netstat -npl | grep process_name (lists the port info of the process_name)
+netstat -npa | grep process_name | grep port_no | wc -l  { counts the no of connects on port by the process }
+
+#
+/etc/cni/net.d -> tells us which net plugin is configured in kuebrnetes cluster, open file inside it gives more info about the plugin binaries etc configured.
+
+
+Vim basic cmds and tricks
+Press shift+v in view mode (not insert) use arrow keys to select an area , use > to right shift the selected region
+
+#
+Curl http://localhost:30081/eat
+curl http://world.universe.mine:30080/asia
+Domain mapped to ip(control plan ip)  in /etc/hosts
+
+
+
+* ---------------------  Architecture, Installation & Maintenance   ------------------------------- *
+
+k get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.requests.cpu}' | awk '{print $9}'  
+
+kubectl  get svc redis-service -o jsonpath={.spec.ports[0].targetPort}
+kubectl get svc redis-service -o=jsonpath='{.spec.ports[?(@.name=="6379-6379")].targetPort}'
+
+* use kubectl in file instead of k alias *
+
+kubectl get secret database-data -n database-ns -o yaml
+
+echo "c2VjcmV0Cg= | base64 -d 
+
+echo "kube-apiserver-controlplane,kube-system" > high_cpu_pod.txt
+
+* -- *
+  containers:
+  - image: alpine:latest
+    name: alpine-container
+    command: ["/bin/sh", "-c"]
+    args:
+    - "tail -f /config/log.txt"
+    volumeMounts:
+    - mountPath: /config
+      name: config-volume
+ Vs: 
+
+containers:
+  - image: alpine:latest
+    name: alpine-container
+    command:
+    - "/bin/sh"
+    -  "-c"
+    args:
+    - "tail -f /config/log.txt"
+
+command: ["/bin/sh", "-c"]
+args: ["tail -f /config/log.txt"]
+
+command: ["/bin/sh"]
+args: ["-c", "tail -f /config/log.txt"]
+
+Pods vs po with kubectl 
+Node vs nodes with kubectl 
+
+
+
+* ---------------------  Services & Networking   ------------------------------- *
+
+
+k port-forward services/nginx-service 8080:80
+curl http://localhost:8080
+
+# Question: svc core dns 
+
+k create deployment dns-rs-cka --replicas 2 --image registry.k8s.io/e2e-test-images/jessie-dnsutils:1.3 -n dns-ns --dry-run=client -oyaml  -- sleep 3600 //remove the strategy and make the updates 
+
+k run nslookup --image busybox -it --rm --restart=Never -- nslookup 192-168-1-5.dns-ns.pod.cluster.local
+
+k -n dns-ns exec dns-rs-cka-7w2br -- nslookup kubernetes.default // from rs not connection to svc in default ns. Troubleshoot cordons deploy and svc 
+	
+Fix the label of cordons in svc to match the the coredns 
+
+k create ingress nginx-ingress-resource --rule "/shop*=nginx-service:80" --annotation=nginx.ingress.kubernetes.io/ssl-redirect="false"  --dry-run=client -oyaml > ingr.yaml
+
+Indentation error: error: error parsing ingres.yaml: error converting YAML to JSON: yaml: line 20: did not find expected key
+
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: my-app-network-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: my-app
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {} //same or other namespace 
+  - from:
+    - podSelector:
+        matchLabels:
+          app: trusted
+  egress:
+  - to:
+    - podSelector: {} //same or other namespace 
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: my-app-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: my-app-deployment
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {}
+    - podSelector:
+        matchLabels:
+          app: trusted
+  egress:
+  - to:
+    - podSelector: {}
+
+kubectl run nginx-pod-cka --image=nginx --restart=Never
+kubectl run nginx-pod-cka --image=nginx -- sleep 1d // keep it running 
+kubectl run busybox --image=busybox --restart=Never --rm -it -- nslookup nginx-service-cka // not working 
+kubectl run nslookup --image=busybox:1.28 --restart=Never --rm -it -- nslookup nginx-service-cka // need to mention the tag version to work busybox:1.28
+
+* --- k run redis-pod --image=redis:7 --port 6379 --command 'redis-server' '/redis-master/redis.conf' --dry-run=client -o yaml > redis-pod.yaml
+* --- The default port is 80 if the port different then 80 then you need --port=port number. 
+
+* --- DNS troubleshooting:
+Check dns svc and the end point 
+Look for selector of svc match dns label 
+
+Always check the formate of output in file if ask to to write to file 
+IP_ADDRESS  //title 
+127.0.0.1
+127.0.0.2
+127.0.0.3
+
+
+* ---------------------  Storage   ------------------------------- *
+
+volumeBindingMode: WaitForFirstConsumer - pv and pic will not bounce until pod creation 
+
+volumeMounts:
+    - mountPath: /var/www/shared
+      name: shared-storage
+      readOnly: true #  ****
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-2fr9p
+      readOnly: true # ***
+
+Node Affinity - Local path only 
+Note: For most volume types, you do not need to set this field. You need to explicitly set this for local volumes.
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: blue-stc-cka
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+                                    
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: blue-pv-cka
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: blue-stc-cka
+  local:
+    path: /opt/blue-data-cka
+  nodeAffinity:
+     required:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: topology.kubernetes.io/hostname # this label already is set on control plane 
+           operator: In
+           values:
+           - controlplane
+
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: blue-pvc-cka
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+  storageClassName: blue-stc-cka
+  volumeName: blue-pv-cka # put volume maybe there is more one pv 
+
+---
+Creating on specific node
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gold-pv-cka
+spec:
+  capacity:
+    storage: 50Mi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: gold-stc-cka
+  hostPath:
+    path: /opt/gold-stc-cka
+  nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - node01
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gold-pvc-cka
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 30Mi
+  storageClassName: gold-stc-cka
+  selector:
+    matchLabels:
+      tier: white
+  volumeName: gold-pv-cka
+
+* PVC resizing - Very important ( remember to kill the pod after resizing pvc) *
+* --- kubectl get pods --selector env=dev --no-headers | wc -l
+
+Check for 
+1. volume mode 
+2, access mode
+3. Resources 
+4. Storage class 
+5. Sc and pv is cuter wide 
+6. Pvc is namespace 
+
+* ---------------------  Troubleshooting  ------------------------------- *
+Issue one 
+Check pod configuration and command/args  if its correct while troubleshooting pod or deployment object 
+1. Image issue 
+2. Command and args issue 
+3. Configuration issue 
+4. Check for on purpose name misspelling like, pic-redis vs redis-pvc. Carefully watch these error 
+5. Node affinity, pod affinity 
+5. Taints tolerations 
+6. Host port 
+7. More then one Taint / k describe node node01 | grep -I taints -A2
+8 check spelling 
+9. Cannot expose pod does not have label 
+10 replicas 0 to one 
+11. k get events
+
+Cronjob 
+1. First check if svc is working: k port-forward services/cka-service 8080:80 
+2. trouble shot svc  
+3. Add labels if it does not have 
+4. Cronjob status completed upon successful run 
+5. * * * * * vs */1 * * * *
+
+DB: back must have file with extension .db 
+
+
+* ---------------------  Workloads & Scheduling  ------------------------------- *
+
+
+CPU:
+Cpu: "0.5" = 500
+
+kubectl set image deployment/cache-deployment *=redis:7.2.1
+OR
+kubectl set image deployment/cache-deployment redis=redis:7.2.1
+Here, redis(is container name)=redis:7.2.1
+
+
+
+
+
+
+
+
+
+
+
+* ---------------------  Other   ------------------------------- *
+
+
+For instance, in the version v1.20.4:
+Major Version: 1.     // core main versions 
+Minor Version: 20   // functionality add or update
+Patch Version: 4  // bug fixes 
+
+1.27.10: This part represents the major, minor, and patch version numbers of Kubernetes.
+Major Version: 1
+Minor Version: 27
+Patch Version: 10
+-1.1: This part seems to include additional information or metadata beyond the standard versioning scheme. 
+
+k create clusterrole app-role-cka --verb '*' --resource '*'
+
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - echo 'abdul' && sleep 3600
+
+k logs pods/application-pod log-reader-container | grep Error > poderrorlogs.txt. // specific logs not all 
+
+kubectl port-forward pods/mongo-75f59d57f4-4nd6q 8000:80
+kubectl port-forward deployment/mongo 8000:80
+kubectl port-forward replicaset/mongo-75f59d57f4 8000:80
+kubectl port-forward service/mongo 8000:80
+Open another terminal and run curl http://localhost:8000
+The kubectl port-forward command is used to forward local ports to a pod running in your Kubernetes cluster. The syntax you provided:
+kubectl port-forward service/mongo 8000:80
+This command forwards port 8000 on your local machine to port 80 of the mongo service in your Kubernetes cluster.
+Here's what each part of the command means:
+kubectl port-forward: This is the command to start port forwarding.
+service/mongo: This specifies the Kubernetes service to which you want to forward the ports.
+8000:80: This specifies the local port (8000) and the remote port (80) to which you want to forward traffic. Traffic sent to localhost:8000 on your local machine will be forwarded to port 80 of the mongo service in your Kubernetes cluster.
+After running this command, any traffic directed to localhost:8000 on your local machine will be forwarded to the mongo service within your Kubernetes cluster.
+
+
+k get pods -o wide -o yaml // to find the path and its easy 
+kubectl get pods -o wide -o custom-columns=IP_ADDRESS:.status.podIP | tac | grep -v "ADDRESS_TO_EXCLUDE"
+
+echo -e "192.168.1.6\n192.168.1.5\n192.168.1.4" | sort  //Ascending
+echo -e '55\n4\n5\n77\n88' | sort 
+
+kubectl get endpoints kube-dns -n kube-system
+
+***
+k -n dns-ns exec dns-rs-cka-4jjx2  -- nslookup kubernetes.default   
+k -n dns-ns exec dns-rs-cka-4jjx2 -it -- nslookup kubernetes.default   // -it to provide shell 
+***
+
+k create ingress nginx-ingress-resource  --rule "/shop=nginx-service:80" --annotation=nginx.ingress.kubernetes.io/ssl-redirect="false". / exact
+k create ingress nginx-ingress-resource  --rule "/shop*=nginx-service:80" --annotation=nginx.ingress.kubern.  //prefix *
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: my-app-network-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: my-app
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {} //same or other namespace 
+    - podSelector:
+        matchLabels:
+         app: trusted
+  egress:
+  - to:
+    - podSelector: {} //same or other namespace
+
+
+systemctl status kubelet.service
+systemctl status kubelet
+/var/lib/kubelet/config.yaml
+/etc/kubernetes/kubelet.conf
+systemctl daemon-reload 
+systemctl status kubelet
+Running systemctl daemon-reload does not restart any services or change their state directly. It's merely refreshing systemd's internal configuration to reflect any recent changes made to unit files.
+
+
+If there is issue in PV and PVC do the correction in PVC to match PV 
+ volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+Event if the volumes not mount and there is issue in name or other then the status pod will be pending until the name is  corrected 
+
+
+Taints: node-role.kubernetes.io/control-plane:NoSchedule
+The taint does not have value so not need operator and value flags 
+tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        effect: "NoSchedule"
+
+Three kinds of operators are admitted =,==,!=. The first two represent equality (and are synonyms), while the latter represents inequality. For example:
+environment = production
+tier != frontend
+nodeSelector: 
+    accelerator: nvidia-tesla-p100
+Vs nodeName
+
+kubectl get pods -l environment=production,tier=frontend
+kubectl get pods -l 'environment in (production),tier in (frontend)'
+k run pod --image nginx -l env=test,frontend=tier
+k get pods -l 'env in (test)'
+
+kubectl port-forward service/cka-service 8080:80
+Success if get the below 
+Forwarding from 127.0.0.1:8080 -> 80
+Forwarding from [::1]:8080 -> 80
+
+kubectl config view |  grep namespace.  / current namespace
+kubectl config view -o yaml  // has more details 
+
+k create secret generic db-secret --from-literal DB_Host=mysql-host --from-literal DB_User=root --from-literal DB_Password=dbpassword // secret generic then NAME
+
+/bin/bash same as bash
+/bin/sh same as sh 
+
+k explain pod.spec.containers
+
+environment variable:
+Export do='--dry-run=client -o yaml' 
+$do
+Export now='--grace-period 0 --force'
+$now
+
+
+
+
+ 
+
+
+
