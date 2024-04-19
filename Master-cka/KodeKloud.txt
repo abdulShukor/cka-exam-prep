@@ -1,6 +1,6 @@
 
 
-Mock exam 1:
+Mock exam 1 :
 
 CroneJob:
  spec:
@@ -8,7 +8,7 @@ CroneJob:
   - command:
   - /bin/sh
   - -c
-  - curl orange-svc-cka10-trb.  // this pod svc not pod 
+  - curl orange-svc-cka10-trb.  // this pod change to svc not pod 
 schedule: '*/2 * * * *' // every two minutes 
 ---
 kubectl get deploy black-cka25-trb -o yaml 
@@ -21,6 +21,7 @@ Zero rs or deployment than need to change it
 kubectl rollout undo -n dev-wl07 deploy webapp-wl07
 kubectl describe deploy -n dev-wl07 webapp-wl07 | grep -i image
 
+OMMKILLED
 Under resources: -> limits: change memory from 256Mi to 512Mi and save the changes.
 
 
@@ -53,7 +54,6 @@ spec:
           operator: In
           values:
           - cluster1-controlplane
-
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -76,9 +76,177 @@ In exam if ask command do command not args
     - sleep
     - "3600"
 
-curl student-node:9999
-curl http://student-node:9999
+curl student-node:9999 vs curl http://student-node:9999
 
 kubectl  cluster3 run --rm  -i test-curl-pod --image=curlimages/curl --restart=Never -- curl -m 2 external-webserver-cka03-svcn
 
+Busybox port is 8080 
+Nginx and https is 80
 
+
+Under livenessProbe: you will see the type is httpGet however the rest of the options are command based so this probe should be of exec type.
+Change httpGet to exec
+
+Notice the command - sleep 3 ; touch /healthcheck; sleep 30;sleep 30000 it starts with a delay of 3 seconds, but the liveness probe initialDelaySeconds is set to 1 and failureThreshold is also 1. Which means the POD will fail just after first attempt of liveness check which will happen just after 1 second of pod start. So to make it stable we must increase the initialDelaySeconds to at least 5
+Change initialDelaySeconds from 1 to 5 and save apply the changes. After 
+kubectl delete pod red-probe-cka12-trb
+Pay very close attention to what need to be change 
+
+
+k exec cyan-white-cka28-trb -it -- wget $(kubectl get pod cyan-pod-cka28-trb -n cyan-ns-cka28-trb -o jsonpath='{.status.podIP}')
+
+kubectl exec -it cyan-white-cka28-trb -- sh curl cyan-svc-cka28-trb.cyan-ns-cka28-trb.svc.cluster.local
+
+ containers:
+      - image: httpd:latest
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 81
+Change  port  to 
+ containers:
+      - image: httpd:latest
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 80
+
+All core api group
+- apiGroups:
+  - "*"
+  resources:
+  - namespaces
+  verbs:
+  - get
+
+
+spec:
+  containers:
+  - name: elastic-app
+    image: busybox:1.28
+    args:
+    - /bin/sh
+    - -c
+    - >
+      mkdir /var/log; 
+      i=0;
+      while true;
+      do
+        echo "$(date) INFO $i" >> /var/log/elastic-app.log;
+        i=$((i+1));
+        sleep 1;
+      done
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  - name: sidecar
+    image: busybox:1.28
+    args: [/bin/sh, -c, 'tail -f  /var/log/elastic-app.log']
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log # Anything in path will mount and access in container 
+
+
+Installing ectcctl tools:
+cd /tmp
+export RELEASE=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep tag_name | cut -d '"' -f 4)
+wget https://github.com/etcd-io/etcd/releases/download/${RELEASE}/etcd-${RELEASE}-linux-amd64.tar.gz
+tar xvf etcd-${RELEASE}-linux-amd64.tar.gz ; cd etcd-${RELEASE}-linux-amd64
+mv etcd etcdctl  /usr/local/bin/
+
+
+Issue with will restart pod after few seconds 
+spec:
+  containers:
+  - name: red-probe-cn-cka12-trb
+    image: busybox:latest
+    args:
+    - /bin/sh
+    - -c
+    - sleep 3 ; touch /healthcheck; sleep 30;sleep 30000
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /healthcheck
+      initialDelaySeconds: 1. // restart the pod after few second sleep 3 initialDelaySeconds 1
+      periodSeconds: 1
+      failureThreshold: 1
+
+Change the initialDelaySeconds to 5
+
+spec:
+  containers:
+  - name: red-probe-cn-cka12-trb
+    image: busybox:latest
+    args:
+    - /bin/sh
+    - -c
+    - sleep 3 ; touch /healthcheck; sleep 30;sleep 30000
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /healthcheck
+      initialDelaySeconds: 5.    // here the diff 
+      periodSeconds: 1
+      failureThreshold: 1
+
+
+kubectl get event --field-selector involvedObject.name=kube-apiserver-cluster4-controlplane -n kube-system
+
+
+From this we can see that the Liveness probe is failing for the kube-apiserver-cluster4-controlplane pod, and we can see its trying to connect to port 6444 port but the default api port is 6443. So let's look into the kube api server manifest.
+ssh cluster4-controlplane
+vi /etc/kubernetes/manifests/kube-apiserver.yaml
+Under livenessProbe: you will see the port: value is 6444, change it to 6443 and save. Now wait for few seconds let the kube api pod come up.
+
+
+- key: node-role.kubernetes.io/control-plane
+  operator: Exists
+  effect: NoSchedule
+
+---
+
+Mock 
+
+Find the pod that consumes the most memory 
+kubectl top pods -A --context cluster1 --no-headers | sort -nr -k4 | head -1 
+
+Find the nod that consumes the most memory 
+kubectl top node --context cluster1 --no-headers | sort -nr -k2 | head -1
+
+Change nginx configuration path to 
+Under volumeMounts: -> - mountPath: /etc/nginx/nginx.conf -> name: nginx-config add subPath: nginx.conf and save the changes.
+
+
+You will notice that some of the keys are different what are reffered in the deployment.
+Change some env keys: db to database , db-user to username and db-password to password
+Change a secret reference: db-user-cka05-trb to db-user-pass-cka05-trb
+Finally save the changes.
+
+Let's look into the service to see its configured correctly.
+Under ports: -> port: and targetPort: is set to 8080 but nginx default port is 80 so change 8080 to 80 and save the changes
+
+journalctl -u kubelet -f
+journalctl -u kubelet -f | grep -v 'connect: connection refused'
+cluster4-controlplane kubelet[2240]: E0923 04:38:15.630925    2240 file.go:187] "Could not process manifest file" err="invalid pod: [spec.containers[0].volumeMounts[1].name: Not found: \"etcd-cert\"]" path="/etc/kubernetes/manifests/etcd.yaml"
+Search for etcd-cert, you will notice that the volume name is etcd-certs but the volume mount is trying to mount etcd-cert volume which is incorrect. Fix the volume mount name and save the changes. Let's restart kubelet service after that.
+systemctl restart kubelet
+
+
+The HOST variable seems incorrect, it must be set to kodekloud
+
+env:
+- name: HOST
+  valueFrom:
+    secretKeyRef:
+      key: hostname
+      name: cat-cka22-trb
+echo "kodekloud" | base64
+kubectl edit secret cat-cka22-trb
+Change requests storage hostname: a29kZWtsb3Vkdg== to hostname: a29kZWtsb3VkCg== (values may vary)
