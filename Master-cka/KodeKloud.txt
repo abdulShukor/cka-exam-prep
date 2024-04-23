@@ -1,6 +1,6 @@
 
+KodeKloud Notes: 
 
-Mock exam 1 :
 
 CroneJob:
  spec:
@@ -9,19 +9,23 @@ CroneJob:
   - /bin/sh
   - -c
   - curl orange-svc-cka10-trb.  // this pod change to svc not pod 
-schedule: '*/2 * * * *' // every two minutes 
+schedule: '*/2 * * * *' // every two minutes 13/02 13/04 ...
+
 ---
+Updated status zero then look for 
 kubectl get deploy black-cka25-trb -o yaml 
 Under status: you will see message: Deployment is paused
 kubectl rollout status deployment black-cka25-trb
 kubectl rollout resume deployment black-cka25-trb
 
-Zero rs or deployment than need to change it 
+Check yaml manifest if the replicasof  rs or deployment  Zero than need to change it 
 
 kubectl rollout undo -n dev-wl07 deploy webapp-wl07
 kubectl describe deploy -n dev-wl07 webapp-wl07 | grep -i image
 
+
 OMMKILLED
+If a pod is keep restoring try to delete if and wait and if you see the OMMKILLED the increase the memory 
 Under resources: -> limits: change memory from 256Mi to 512Mi and save the changes.
 
 
@@ -76,27 +80,47 @@ In exam if ask command do command not args
     - sleep
     - "3600"
 
-curl student-node:9999 vs curl http://student-node:9999
+curl student-node:9999 
+curl http://student-node:9999
 
 kubectl  cluster3 run --rm  -i test-curl-pod --image=curlimages/curl --restart=Never -- curl -m 2 external-webserver-cka03-svcn
 
-Busybox port is 8080 
+Busybox port is 8080 // if specify the container or target port different then that will give you error 
 Nginx and https is 80
 
 
+Full attention 
 Under livenessProbe: you will see the type is httpGet however the rest of the options are command based so this probe should be of exec type.
 Change httpGet to exec
 
+livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+
+VS 
+
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+
+Troubleshooting:
+
 Notice the command - sleep 3 ; touch /healthcheck; sleep 30;sleep 30000 it starts with a delay of 3 seconds, but the liveness probe initialDelaySeconds is set to 1 and failureThreshold is also 1. Which means the POD will fail just after first attempt of liveness check which will happen just after 1 second of pod start. So to make it stable we must increase the initialDelaySeconds to at least 5
-Change initialDelaySeconds from 1 to 5 and save apply the changes. After 
+Change initialDelaySeconds from 1 to 5 and save apply the changes. 
+After 
 kubectl delete pod red-probe-cka12-trb
 Pay very close attention to what need to be change 
 
-
+Network policies:
 k exec cyan-white-cka28-trb -it -- wget $(kubectl get pod cyan-pod-cka28-trb -n cyan-ns-cka28-trb -o jsonpath='{.status.podIP}')
 
 kubectl exec -it cyan-white-cka28-trb -- sh curl cyan-svc-cka28-trb.cyan-ns-cka28-trb.svc.cluster.local
 
+
+Troubleshooting:
  containers:
       - image: httpd:latest
         imagePullPolicy: Always
@@ -114,7 +138,7 @@ Change  port  to
           httpGet:
             path: /
             port: 80
-
+---
 All core api group
 - apiGroups:
   - "*"
@@ -123,7 +147,7 @@ All core api group
   verbs:
   - get
 
-
+Adding sidecar container shared volume:
 spec:
   containers:
   - name: elastic-app
@@ -148,16 +172,18 @@ spec:
     args: [/bin/sh, -c, 'tail -f  /var/log/elastic-app.log']
     volumeMounts:
     - name: varlog
-      mountPath: /var/log # Anything in path will mount and access in container 
+      mountPath: /var/log # ************ Anything in path will mount and access in container ************* 
 
-
-Installing ectcctl tools:
+-
+Installing ectdctl tools:
 cd /tmp
 export RELEASE=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep tag_name | cut -d '"' -f 4)
 wget https://github.com/etcd-io/etcd/releases/download/${RELEASE}/etcd-${RELEASE}-linux-amd64.tar.gz
 tar xvf etcd-${RELEASE}-linux-amd64.tar.gz ; cd etcd-${RELEASE}-linux-amd64
 mv etcd etcdctl  /usr/local/bin/
 
+-
+Troubleshooting:
 
 Issue with will restart pod after few seconds 
 spec:
@@ -196,51 +222,66 @@ spec:
       periodSeconds: 1
       failureThreshold: 1
 
-
+-
 kubectl get event --field-selector involvedObject.name=kube-apiserver-cluster4-controlplane -n kube-system
 
-
+-
+Troubleshooting:
+Logs:
 From this we can see that the Liveness probe is failing for the kube-apiserver-cluster4-controlplane pod, and we can see its trying to connect to port 6444 port but the default api port is 6443. So let's look into the kube api server manifest.
 ssh cluster4-controlplane
 vi /etc/kubernetes/manifests/kube-apiserver.yaml
 Under livenessProbe: you will see the port: value is 6444, change it to 6443 and save. Now wait for few seconds let the kube api pod come up.
 
-
+-
+Troubleshooting:
+Pending pod
 - key: node-role.kubernetes.io/control-plane
   operator: Exists
   effect: NoSchedule
 
----
-
-Mock 
-
+-
 Find the pod that consumes the most memory 
 kubectl top pods -A --context cluster1 --no-headers | sort -nr -k4 | head -1 
 
-Find the nod that consumes the most memory 
+Find the node that consumes the most memory 
 kubectl top node --context cluster1 --no-headers | sort -nr -k2 | head -1
 
+-
+Troubleshooting:
 Change nginx configuration path to 
 Under volumeMounts: -> - mountPath: /etc/nginx/nginx.conf -> name: nginx-config add subPath: nginx.conf and save the changes.
 
+-
+Troubleshooting:
 
-You will notice that some of the keys are different what are reffered in the deployment.
+You will notice that some of the keys are different what are referred in the deployment.
 Change some env keys: db to database , db-user to username and db-password to password
 Change a secret reference: db-user-cka05-trb to db-user-pass-cka05-trb
 Finally save the changes.
+Catch In the name of secret pay attention close to that
+
+-
+Troubleshooting:
 
 Let's look into the service to see its configured correctly.
 Under ports: -> port: and targetPort: is set to 8080 but nginx default port is 80 so change 8080 to 80 and save the changes
 
+-
+Troubleshooting:
+
 journalctl -u kubelet -f
 journalctl -u kubelet -f | grep -v 'connect: connection refused'
 cluster4-controlplane kubelet[2240]: E0923 04:38:15.630925    2240 file.go:187] "Could not process manifest file" err="invalid pod: [spec.containers[0].volumeMounts[1].name: Not found: \"etcd-cert\"]" path="/etc/kubernetes/manifests/etcd.yaml"
-Search for etcd-cert, you will notice that the volume name is etcd-certs but the volume mount is trying to mount etcd-cert volume which is incorrect. Fix the volume mount name and save the changes. Let's restart kubelet service after that.
+Search for etcd-cert, you will notice that the volume name is etcd-certs but the volume mount is trying to mount etcd-cert volume which is incorrect. Fix the volume mount name and save the changes. 
+Let's restart kubelet service after that.
 systemctl restart kubelet
 
 
-The HOST variable seems incorrect, it must be set to kodekloud
+-
+Troubleshooting:
 
+The HOST variable value seems incorrect, it must be set to kodekloud
 env:
 - name: HOST
   valueFrom:
@@ -250,3 +291,560 @@ env:
 echo "kodekloud" | base64
 kubectl edit secret cat-cka22-trb
 Change requests storage hostname: a29kZWtsb3Vkdg== to hostname: a29kZWtsb3VkCg== (values may vary)
+
+-
+Troubleshooting:
+
+Student-Node
+More than cluster in .kube/config
+
+-
+Troubleshooting:
+
+/bin/sh vs /bin/bash -- container will have one of them only at time 
+
+-
+Troubleshooting:
+
+Check status of deployment updated column  if not pause will say updated number. 
+Replicas: 1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+k get deployments.apps black-cka25-trb -o yaml
+message: Deployment has minimum availability.
+k rollout status  deployment black-cka25-trb 
+Waiting for deployment "black-cka25-trb" rollout to finish: 0 out of 1 new replicas have been updated.
+
+-
+Troubleshooting:
+
+Check deployment replicas is not 0
+
+-
+kubectl run looper-cka16-arch --image=busybox  --dry-run=client -o yaml --command -- sh -c "while true; do echo hello; sleep 10; done"
+
+-
+kubectl get event --field-selector involvedObject.name=web-dp-cka06-trb-xxxx --sort-by='.lastTimestamp'
+
+-
+Writing command in file make ***** put kubectl not the alias. ******
+echo "kubectl get po -n kube-system kube-apiserver-cluster1-controlplane -o jsonpath='{.metadata.labels.component}'" > /root/pod-cka26-arch.sh
+
+-
+Troubleshooting:
+Ingress	resources should be in same spec and deployment or app 
+Grap node port form ingressControler namespace
+Debug ingress, svc and deployment, exposing through ingress 
+Ingress classname 
+Service nodePOrt  located in where ingress controller is 
+Servie name
+Port 
+Hostname 
+Ingress should be in same ns as app is 
+
+-
+Troubleshooting:
+
+Error: failed to create containerd task: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: exec: "/bin/bash": stat /bin/bash: no such file or directory: unknown 
+Change bash to sh 
+
+-
+*******--- Networking and service: --- ******
+kubectl create service clusterip service-3421-svcn -n spectra-1267 --tcp=8080:80 --dry-run=client -o yaml > service-3421-svcn.yaml
+Edit add these 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: service-3421-svcn
+  name: service-3421-svcn
+  namespace: spectra-1267
+spec:
+  ports:
+  - name: 8080-80
+    port: 8080
+    protocol: TCP
+    targetPort: 80 
+  selector:
+     mode: exam
+     type: external 
+  type: ClusterIP
+status:
+  loadBalancer: {} 
+---
+selector:
+    app: service-3421-svcn  # delete 
+    mode: exam    # add
+    type: external  # add
+  type: ClusterIP
+
+Looks like there are a lot of pods created to confuse us. But we are only concerned with the labels of pod-23 and pod-21.
+As we can see both the required pods have labels mode=exam,type=external in common. Let's confirm that using kubectl too:
+kubectl get pod -l mode=exam,type=external -n spectra-1267
+
+k -n spectra-1267 get pods  -o custom-columns=POD_NAME:.metadata.name,IP_ADDR:.status.podIP --sort-by .status.podIP 
+
+-
+kubectl --context cluster1 get pod -n kube-system kube-apiserver-cluster1-controlplane  -o jsonpath='{.metadata.labels.component}'
+
+-
+journalctl -u kubelet --since "30 min ago" | grep 'Error:'
+ls /etc/kubernetes/pki/
+systemctl start kubelet
+vi /etc/kubernetes/kubelet.conf
+
+###############################
+
+Mock exam 1:
+Host variable value is wrong define in secrets. Make the correct 
+echo "<the decoded value you see for hostname" | base64 -d
+Change requests storage hostname: a29kZWtsb3Vkdg== to hostname: a29kZWtsb3VkCg== (values may vary)
+
+***
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: olive-pvc-cka10-str
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: olive-stc-cka10-str
+  volumeName: olive-pv-cka10-str
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: olive-app-cka10-str
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: olive-app-cka10-str
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - cluster1-node01
+      containers:
+      - name: python
+        image: poroko/flask-demo-app
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: python-data
+          mountPath: /usr/share/
+      - name: busybox
+        image: busybox
+        command:
+          - "bin/sh"
+          - "-c"
+          - "sleep 10000"
+        volumeMounts:
+          - name: python-data
+            mountPath: "/usr/src"
+            readOnly: true
+      volumes:
+      - name: python-data
+        persistentVolumeClaim:
+          claimName: olive-pvc-cka10-str
+  selector:
+    matchLabels:
+      app: olive-app-cka10-str
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: olive-svc-cka10-str
+spec:
+  type: NodePort
+  ports:
+    - port: 5000
+      nodePort: 32006
+  selector:
+    app: olive-app-cka10-str
+
+***
+
+Get the IP of the nginx-resolver-cka06-svcn pod and replace the dots(.) with hyphon(-) which will be used below.
+kubectl get pod nginx-resolver-cka06-svcn -o wide
+
+IP=`kubectl get pod nginx-resolver-cka06-svcn -o wide --no-headers | awk '{print $6}' | tr '.' '-'`
+
+kubectl run test-nslookup --image=busybox:1.28 --rm -it --restart=Never -- nslookup $IP.default.pod > /root/CKA/nginx.pod.cka06.svcn
+
+
+Create a ClusterIP service .i.e. service-3421-svcn in the spectra-1267 ns which should expose the pods namely pod-23 and pod-21 with port set to 8080 and targetport to 80.
+kubectl get pods --show-labels -n spectra-1267
+kubectl get pod -l mode=exam,type=external -n spectra-1267 
+kubectl create service clusterip service-3421-svcn -n spectra-1267 --tcp=8080:80 --dry-run=client -o yaml > service-3421-svcn.yaml
+
+student-node ~ ➜  cat service-3421-svcn.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: service-3421-svcn
+  name: service-3421-svcn
+  namespace: spectra-1267
+spec:
+  ports:
+  - name: 8080-80
+    port: 8080
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: service-3421-svcn  # delete 
+    mode: exam    # add
+    type: external  # add
+  type: ClusterIP
+status:
+  loadBalancer: {}
+kubectl get pods -n spectra-1267 -o=custom-columns='POD_NAME:metadata.name,IP_ADDR:status.podIP' --sort-by=.status.podIP
+
+---
+kubectl expose -n app-space deployment webapp-wear-cka09-svcn --type=LoadBalancer --name=wear-service-cka09-svcn --port=8080
+
+---
+Mock exam 2:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: elastic-app-cka02-arch
+spec:
+  containers:
+  - name: elastic-app
+    image: busybox:1.28
+    args:
+    - /bin/sh
+    - -c
+    - >
+      mkdir /var/log; 
+      i=0;
+      while true;
+      do
+        echo "$(date) INFO $i" >> /var/log/elastic-app.log;
+        i=$((i+1));
+        sleep 1;
+      done
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log        // *******
+  - name: sidecar 
+    image: busybox:1.28
+    args: [/bin/sh, -c, 'tail -f  /var/log/elastic-app.log']
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log      // *******
+  volumes:
+  - name: varlog
+    emptyDir: {}
+***
+
+-
+kubectl top node --context cluster1 --no-headers | sort -nr -k4 | head -1
+
+echo cluster3,cluster3-controlplane > /opt/high_memory_node 
+
+kubectl --context cluster1 get pod -n kube-system kube-apiserver-cluster1-controlplane  -o jsonpath='{.metadata.labels.component}'
+
+-
+kubectl auth can-i get deployments --as=system:serviceaccount:default:deploy-cka19-trb
+
+-
+kubectl get events --sort-by='.metadata.creationTimestamp' -A
+
+-
+Under livenessProbe: you will see the type is httpGet however the rest of the options are command based so this probe should be of exec type.
+Change httpGet to exec
+Notice the command - sleep 3 ; touch /healthcheck; sleep 30;sleep 30000 it starts with a delay of 3 seconds, but the liveness probe initialDelaySeconds is set to 1 and failureThreshold is also 1. Which means the POD will fail just after first attempt of liveness check which will happen just after 1 second of pod start. So to make it stable we must increase the initialDelaySeconds to at least 5
+Change initialDelaySeconds from 1 to 5 and save apply the changes.
+
+-
+kubectl exec -n dev-cka02-svcn -i -t tester-cka02-svcn -- nslookup kubernetes.default
+
+-
+POD_NAME=`k get pods -n ns-12345-svcn --no-headers | head -1 | awk '{print $1}'`
+kubectl exec -n ns-12345-svcn -i -t $POD_NAME -- nslookup kubernetes.default
+
+-
+Can use any method for updates 
+student-node ~ ➜  kubectl patch service -n kube-system kube-dns -p '{"spec":{"selector":{"k8s-app": "kube-dns"}}}'
+
+*******
+Mock exam 3: 
+
+kubectl --context cluster1 get pod -n kube-system kube-apiserver-cluster1-controlplane  -o jsonpath='{.metadata.labels.component}'
+
+
+-
+Try to access the app using curl http://kodekloud-ingress.app command. You will see 404 Not Found error.
+
+
+kubectl edit cronjob orange-cron-cka10-trb
+Change schedule * * * * * to */2 * * * *
+Change command curl orange-app-cka10-trb to curl orange-svc-cka10-trb
+
+kubectl exec -it purple-app-cka27-trb -- bash
+curl http://purple-svc-cka27-trb
+kubectl edit svc purple-svc-cka27-trb
+Under ports: -> port: and targetPort: is set to 8080 but nginx default port is 80 so change 8080 to 80 and save the changes
+
+spec:
+  containers:
+  - image: kodekloud/simple-webapp-mysql
+    name: webapp-pod-wl05
+    envFrom:
+    - secretRef:
+        name: db-secret-wl05
+
+
+-
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: orange-stc-cka07-str
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: orange-pv-cka07-str
+spec:
+  capacity:
+    storage: 150Mi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: orange-stc-cka07-str
+  local:
+    path: /opt/orange-data-cka07-str
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - cluster1-controlplane
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: orange-pvc-cka07-str
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: orange-stc-cka07-str
+  volumeName: orange-pv-cka07-str
+  resources:
+    requests:
+      storage: 128Mi
+
+-
+External 
+curl student-node:9999
+As we can see there is no endpoints specified for the service, hence we won't be able to get any output. Since we can not destroy any k8s object, let's create the endpoint manually for this service as shown below:
+
+student-node ~ ➜  export IP_ADDR=$(ifconfig eth0 | grep inet | awk '{print $2}')
+
+student-node ~ ➜ kubectl --context cluster3 apply -f - <<EOF
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # the name here should match the name of the Service
+  name: external-webserver-cka03-svcn
+subsets:
+  - addresses:
+      - ip: $IP_ADDR
+    ports:
+      - port: 9999
+EOF
+
+- 
+student-node ~ ➜  kubectl --context cluster3 run --rm  -i test-curl-pod --image=curlimages/curl --restart=Never -- curl -m 2 external-webserver-cka03-svcn
+
+**********
+Lab- CKA Mock Exam 4
+-
+kubectl get deploy black-cka25-trb -o yaml
+Under status: you will see message: Deployment is paused so seems like deployment was paused, let check the rollout status
+
+-
+kubectl get rolebinding -o yaml | grep -B 5 -A 5 thor-cka24-trb
+kubectl get pods -A | grep -i pending
+
+
+Lab- CKA Mock Exam 5
+
+kubectl delete pod green-deployment-cka15-trb-xxxx
+Now watch closely the POD status
+kubectl get pod
+Pretty soon you will see the POD status has been changed to OOMKilled which confirms its the memory issue. So let's look into the resources that are assigned to this deployment.
+kubectl get deploy
+kubectl edit deploy green-deployment-cka15-trb
+Under resources: -> limits: change memory from 256Mi to 512Mi and save the changes.
+
+kubectl get event --field-selector involvedObject.name=web-dp-cka06-trb-xxxx --sort-by='.lastTimestamp'
+
+
+**********
+Lab- CKA Mock Exam 6
+
+Accessing to all core core group
+
+student-node ~ ➜ kubectl --context cluster1 create serviceaccount pink-sa-cka24-arch
+student-node ~ ➜ kubectl --context cluster1 create clusterrole pink-role-cka24-arch --resource=* --verb=*
+student-node ~ ➜ kubectl --context cluster1 create clusterrolebinding pink-role-binding-cka24-arch --clusterrole=pink-role-cka24-arch --serviceaccount=default:pink-sa-cka24-arch
+
+kubectl get event --field-selector involvedObject.name=web-dp-cka06-trb-xxxx --sort-by='.lastTimestamp'
+
+
+**********  --  *********
+Resize the PVC to 80Mi and make sure the PVC is in Bound state.
+vi /tmp/papaya-pv-cka09-str.yaml
+Delete all entries for uid:, annotations, status:, claimRef: from the template.
+Edit papaya-pvc-cka09-str PVC:
+
+kubectl get pvc papaya-pvc-cka09-str -o yaml > /tmp/papaya-pvc-cka09-str.yaml
+Edit the template:
+
+vi /tmp/papaya-pvc-cka09-str.yaml
+Under resources: -> requests: change storage: 50Mi to storage: 80Mi and save the template.
+Delete the exsiting PVC:
+
+kubectl delete pvc papaya-pvc-cka09-str
+Delete the exsiting PV and create using the template:
+
+kubectl delete pv papaya-pv-cka09-str
+kubectl apply -f /tmp/papaya-pv-cka09-str.yaml
+
+*******
+Lab- CKA Mock Exam 7
+
+Edit the blue-role-cka21-arch to update permissions:
+
+student-nokubectl edit clusterrole blue-role-cka21-arch --context cluster1
+
+Under rules: -> - apiGroups: replace apps with "" ************ -- ********
+
+resources: replace - deployments with - pods and save the changes.
+
+kubectl run messaging-cka07-svcn --image=redis:alpine -l tier=msg  *** bitter to label to while creation otherwise 
+
+
+
+
+Lab- CKA Mock Exam 8
+
+
+
+Lab- CKA Mock Exam 9
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grape-pod-cka06-str
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+      - name: grape-vol-cka06-str
+        mountPath: "/var/log/nginx"
+  - name: busybox
+    image: busybox
+    command:
+      - "bin/sh"
+      - "-c"
+      - "sleep 10000"
+    volumeMounts:
+      - name: grape-vol-cka06-str
+        mountPath: "/usr/src"
+  volumes:
+  - name: grape-vol-cka06-str
+    emptyDir: {}
+
+Lab- CKA Mock Exam 10
+************
+curl kodekloud-pink.app
+You must be getting 503 Service Temporarily Unavailabl error.
+Let's look into the service:
+kubectl edit svc pink-svc-cka16-trb
+Under ports: change protocol: UDP to protocol: TCP
+
+cd /tmp
+export RELEASE=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep tag_name | cut -d '"' -f 4)
+wget https://github.com/etcd-io/etcd/releases/download/${RELEASE}/etcd-${RELEASE}-linux-amd64.tar.gz
+tar xvf etcd-${RELEASE}-linux-amd64.tar.gz ; cd etcd-${RELEASE}-linux-amd64
+mv etcd etcdctl  /usr/local/bin/
+
+--
+It might stuck for forever, let's see why that would happen. Try to list the PODs first
+kubectl get pod -A
+There might an error like
+
+The connection to the server cluster4-controlplane:6443 was refused - did you specify the right host or port?
+There seems to be some issue with the cluster so let's look into the logs
+
+journalctl -u kubelet -f
+You will see a lot of connect: connection refused erros but that must be because the different cluster components are not able to connect to the api server so try to filter out these logs to look more closly
+
+journalctl -u kubelet -f | grep -v 'connect: connection refused'
+You should see some erros as below
+
+cluster4-controlplane kubelet[2240]: E0923 04:38:15.630925    2240 file.go:187] "Could not process manifest file" err="invalid pod: [spec.containers[0].volumeMounts[1].name: Not found: \"etcd-cert\"]" path="/etc/kubernetes/manifests/etcd.yaml"
+So seems like there is some incorrect volume which etcd is trying to mount, let's look into the etcd manifest.
+
+vi /etc/kubernetes/manifests/etcd.yaml 
+Search for etcd-cert, you will notice that the volume name is etcd-certs but the volume mount is trying to mount etcd-cert volume which is incorrect. Fix the volume mount name and save the changes. Let's restart kubelet service after that.
+
+systemctl restart kubelet
+Wait for few minutes to see if its good now.
+
+kubectl get pod -A
+
+-
+We have created a service account called green-sa-cka22-arch, a cluster role called green-role-cka22-arch and a cluster role binding called green-role-binding-cka22-arch.
+Update the permissions of this service account so that it can only get all the namespaces in cluster1.
+- apiGroups:
+  - "*"
+  resources:
+  - namespaces
+  verbs:
+  - get
+kubectl auth can-i get namespaces --as=system:serviceaccount:default:green-sa-cka22-arch
+
+-
+Deployment 
+When curl not working 
+Check pod image port if match svc port 
+Check the pod lable with svc should match 
+Check the endpoint 
+Check the core dns if up 
+Check the core dns svc 
+Check the svc selector to match the core dns labels
+If image default port is 80 and svc is 8080 then won't works. Like nginx 
+Check the port too dnc svc 
+
+While creating svc look for unique lebels for pods if not then will acquire the pod the with same label 
+
+
+
+
+
